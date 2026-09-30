@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Panel — Perfil 360 | Magneto</title>
+<link rel="icon" href="img/logo-perfil3601.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="dashboard.html" class="navbar__logo">
+    <img src="img/logo-perfil3601.png" alt="Perfil 360" />
+    <span>Perfil 360</span>
+  </a>
+  <div class="navbar__links" id="navbar-links"></div>
+  <div id="widget-completitud"></div>
+  <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
+</nav>
+
+<div class="pagina-contenido">
+  <div class="mascota-guia" id="mascota-bienvenida"></div>
+  <h1 id="titulo-bienvenida">¡Bienvenido!</h1>
+  <p class="descripcion-pagina" id="subtitulo-bienvenida">Este es tu panel de Perfil 360.</p>
+
+  <!-- Contenido para CANDIDATO -->
+  <div id="vista-candidato" style="display:none;">
+    <div class="tarjeta">
+      <div class="progreso-perfil__encabezado">
+        <h3>Completitud de tu perfil</h3>
+        <span class="progreso-perfil__porcentaje" id="texto-porcentaje">0%</span>
+      </div>
+      <div class="progreso-perfil__barra-fondo">
+        <div class="progreso-perfil__barra-relleno" id="barra-relleno" style="width:0%"></div>
+      </div>
+      <ul class="lista-faltantes" id="lista-faltantes"></ul>
+      <div class="logros-fila" id="logros-fila"></div>
+    </div>
+
+    <div class="fila-doble">
+      <a href="perfil.html" class="tarjeta" style="text-decoration:none; display:block;">
+        <h3 style="font-family:var(--fuente-titulos); color:var(--azul); margin:0 0 6px;">📝 Completar mi perfil</h3>
+        <p style="color:var(--gris-texto); font-size:13.5px; margin:0;">Agrega tu formación, experiencia y habilidades.</p>
+      </a>
+      <a href="vacantes.html" class="tarjeta" style="text-decoration:none; display:block;">
+        <h3 style="font-family:var(--fuente-titulos); color:var(--azul); margin:0 0 6px;">🎯 Ver vacantes recomendadas</h3>
+        <p style="color:var(--gris-texto); font-size:13.5px; margin:0;">Explora oportunidades ordenadas por coincidencia.</p>
+      </a>
+    </div>
+    <a href="postulaciones.html" class="tarjeta" style="text-decoration:none; display:block; margin-top:0;">
+      <h3 style="font-family:var(--fuente-titulos); color:var(--azul); margin:0 0 6px;">📋 Mi tablero de postulaciones</h3>
+      <p style="color:var(--gris-texto); font-size:13.5px; margin:0;">Haz seguimiento al estado de cada proceso.</p>
+    </a>
+  </div>
+
+  <!-- Contenido para ADMIN -->
+  <div id="vista-admin" style="display:none;">
+    <a href="admin-vacantes.html" class="tarjeta" style="text-decoration:none; display:block;">
+      <h3 style="font-family:var(--fuente-titulos); color:var(--azul); margin:0 0 6px;">🗂️ Administrar vacantes</h3>
+      <p style="color:var(--gris-texto); font-size:13.5px; margin:0;">Sincroniza vacantes de Magneto y controla su estado.</p>
+    </a>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/dashboard.js"></script>
+</body>
+</html>

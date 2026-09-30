@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mi Perfil — Perfil 360 | Magneto</title>
+<link rel="icon" href="img/logo-perfil3601.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="dashboard.html" class="navbar__logo">
+    <img src="img/logo-perfil3601.png" alt="Perfil 360" />
+    <span>Perfil 360</span>
+  </a>
+  <div class="navbar__links" id="navbar-links"></div>
+  <div id="widget-completitud"></div>
+  <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
+</nav>
+
+<div class="pagina-contenido" style="max-width: 760px;">
+  <h1>Mi perfil profesional</h1>
+  <p class="descripcion-pagina">Completa cada sección para que podamos recomendarte mejores vacantes.</p>
+
+  <div class="mascota-guia" id="mascota-guia-perfil"></div>
+
+  <div class="tarjeta">
+
+    <div class="stepper-nav">
+      <div class="stepper-nav__paso activo" data-paso="1">1. Datos básicos</div>
+      <div class="stepper-nav__paso" data-paso="2">2. Educación</div>
+      <div class="stepper-nav__paso" data-paso="3">3. Experiencia</div>
+      <div class="stepper-nav__paso" data-paso="4">4. Habilidades</div>
+    </div>
+
+    <form id="form-perfil" novalidate>
+
+      <!-- ===================== PASO 1: DATOS BASICOS ===================== -->
+      <div class="paso-formulario activo" data-paso="1">
+        <div class="fila-doble">
+          <div class="campo">
+            <label for="nivel_educativo">Nivel educativo actual *</label>
+            <select id="nivel_educativo" required>
+              <option value="">Selecciona una opción</option>
+              <option value="bachiller">Bachiller</option>
+              <option value="tecnico">Técnico</option>
+              <option value="tecnologo">Tecnólogo</option>
+              <option value="pregrado">Pregrado</option>
+              <option value="posgrado">Posgrado / Especialización</option>
+              <option value="maestria">Maestría</option>
+              <option value="doctorado">Doctorado</option>
+            </select>
+            <div class="campo__error-msg" id="error-nivel_educativo">Selecciona tu nivel educativo.</div>
+          </div>
+          <div class="campo">
+            <label for="modalidad_preferida">Modalidad de trabajo preferida *</label>
+            <select id="modalidad_preferida" required>
+              <option value="">Selecciona una opción</option>
+              <option value="remoto">Remoto</option>
+              <option value="presencial">Presencial</option>
+              <option value="hibrido">Híbrido</option>
+            </select>
+            <div class="campo__error-msg" id="error-modalidad_preferida">Selecciona una modalidad.</div>
+          </div>
+        </div>
+
+        <div class="campo">
+          <label for="resumen">Resumen profesional *</label>
+          <textarea id="resumen" placeholder="Cuéntanos brevemente quién eres profesionalmente..." required></textarea>
+          <div class="campo__error-msg" id="error-resumen">Escribe un breve resumen profesional.</div>
+        </div>
+
+        <div class="fila-doble">
+          <div class="campo">
+            <label for="salario_esperado_min">Salario esperado — mínimo (COP)</label>
+            <input type="number" id="salario_esperado_min" placeholder="Ej: 2500000" min="0" />
+          </div>
+          <div class="campo">
+            <label for="salario_esperado_max">Salario esperado — máximo (COP)</label>
+            <input type="number" id="salario_esperado_max" placeholder="Ej: 4000000" min="0" />
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== PASO 2: EDUCACION ===================== -->
+      <div class="paso-formulario" data-paso="2">
+        <div class="repetible-lista" id="lista-educaciones"></div>
+        <button type="button" class="btn-agregar" id="btn-agregar-educacion">+ Agregar formación académica</button>
+      </div>
+
+      <!-- ===================== PASO 3: EXPERIENCIA ===================== -->
+      <div class="paso-formulario" data-paso="3">
+        <div class="repetible-lista" id="lista-experiencias"></div>
+        <button type="button" class="btn-agregar" id="btn-agregar-experiencia">+ Agregar experiencia laboral</button>
+      </div>
+
+      <!-- ===================== PASO 4: HABILIDADES ===================== -->
+      <div class="paso-formulario" data-paso="4">
+        <div class="campo">
+          <label for="input-habilidad">Habilidades</label>
+          <input type="text" id="input-habilidad" placeholder="Escribe una habilidad y presiona Enter (ej: Node.js)" />
+          <div class="campo__ayuda">Agrega al menos 3 habilidades para mejorar tus recomendaciones.</div>
+          <div class="chips-contenedor" id="chips-habilidades"></div>
+        </div>
+      </div>
+
+      <div class="stepper-botones">
+        <button type="button" class="btn-secundario" id="btn-anterior" style="visibility:hidden;">← Anterior</button>
+        <button type="button" class="btn-primario" id="btn-siguiente" style="width:auto;">Siguiente →</button>
+        <button type="submit" class="btn-primario" id="btn-guardar" style="width:auto; display:none;">
+          <span class="spinner" id="spinner-guardar"></span>
+          <span id="texto-btn-guardar">Guardar Perfil</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Plantillas ocultas usadas por perfil.js para clonar filas repetibles -->
+<template id="plantilla-educacion">
+  <div class="repetible-item" data-fila-educacion>
+    <button type="button" class="repetible-item__quitar" data-accion="quitar">✕ Quitar</button>
+    <div class="fila-doble">
+      <div class="campo">
+        <label>Nivel *</label>
+        <select data-campo="nivel" required>
+          <option value="">Selecciona</option>
+          <option value="bachiller">Bachiller</option>
+          <option value="tecnico">Técnico</option>
+          <option value="tecnologo">Tecnólogo</option>
+          <option value="pregrado">Pregrado</option>
+          <option value="posgrado">Posgrado</option>
+          <option value="maestria">Maestría</option>
+          <option value="doctorado">Doctorado</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label>Institución *</label>
+        <input type="text" data-campo="institucion" placeholder="Ej: Universidad EAFIT" required />
+      </div>
+    </div>
+    <div class="fila-doble">
+      <div class="campo">
+        <label>Título obtenido *</label>
+        <input type="text" data-campo="titulo_obtenido" placeholder="Ej: Ingeniería de Sistemas" required />
+      </div>
+      <div class="campo">
+        <label>Fecha de graduación (déjalo vacío si aún estás cursando)</label>
+        <input type="date" data-campo="fecha_graduacion" />
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="plantilla-experiencia">
+  <div class="repetible-item" data-fila-experiencia>
+    <button type="button" class="repetible-item__quitar" data-accion="quitar">✕ Quitar</button>
+    <div class="fila-doble">
+      <div class="campo">
+        <label>Cargo *</label>
+        <input type="text" data-campo="cargo" placeholder="Ej: Desarrollador Backend" required />
+      </div>
+      <div class="campo">
+        <label>Empresa *</label>
+        <input type="text" data-campo="empresa" placeholder="Ej: Magneto365" required />
+      </div>
+    </div>
+    <div class="fila-doble">
+      <div class="campo">
+        <label>Fecha de inicio *</label>
+        <input type="date" data-campo="fecha_inicio" required />
+      </div>
+      <div class="campo">
+        <label>Fecha de fin (déjalo vacío si es tu trabajo actual)</label>
+        <input type="date" data-campo="fecha_fin" />
+      </div>
+    </div>
+    <div class="campo">
+      <label>Descripción breve</label>
+      <textarea data-campo="descripcion" placeholder="¿Qué hacías en este rol?"></textarea>
+    </div>
+  </div>
+</template>
+
+<script src="js/utils.js"></script>
+<script src="js/perfil.js"></script>
+</body>
+</html>

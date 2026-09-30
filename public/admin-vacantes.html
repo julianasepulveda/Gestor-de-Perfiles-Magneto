@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Administrar vacantes — Perfil 360 | Magneto</title>
+<link rel="icon" href="img/logo-perfil3601.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="dashboard.html" class="navbar__logo">
+    <img src="img/logo-perfil3601.png" alt="Perfil 360" />
+    <span>Perfil 360</span>
+  </a>
+  <div class="navbar__links"><a href="admin-vacantes.html" class="activo">Vacantes</a></div>
+  <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
+</nav>
+
+<div class="pagina-contenido">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+    <div>
+      <h1>Administrar vacantes</h1>
+      <p class="descripcion-pagina">Sincroniza las vacantes disponibles desde Magneto y controla su visibilidad.</p>
+    </div>
+    <button class="btn-primario" id="btn-sincronizar" style="width:auto;">
+      <span class="spinner" id="spinner-sincronizar"></span>
+      <span id="texto-btn-sincronizar">🔄 Sincronizar Vacantes</span>
+    </button>
+  </div>
+
+  <div class="alerta alerta--error" id="alerta-error" style="margin-bottom:20px;"></div>
+  <div class="alerta alerta--exito" id="alerta-exito" style="margin-bottom:20px;"></div>
+
+  <div class="tarjeta" style="padding:0; overflow-x:auto;">
+    <table class="tabla-simple" id="tabla-vacantes">
+      <thead>
+        <tr>
+          <th>Título</th>
+          <th>Modalidad</th>
+          <th>Fecha de creación</th>
+          <th>Estado</th>
+          <th>Activa / Inactiva</th>
+        </tr>
+      </thead>
+      <tbody id="cuerpo-tabla-vacantes">
+        <tr><td colspan="5" class="spinner-carga">Cargando vacantes...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/admin-vacantes.js"></script>
+</body>
+</html>
