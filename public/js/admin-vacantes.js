@@ -7,7 +7,83 @@ const usuario = protegerPaginaPorRol(['admin']);
 if (usuario) {
   activarBotonSalir();
   document.getElementById('btn-sincronizar').addEventListener('click', sincronizarVacantes);
+  document.getElementById('form-vacante').addEventListener('submit', crearVacante);
   cargarVacantes();
+}
+
+// ================================================================
+// Crear vacante manualmente (POST /api/vacantes) — modulo admin
+// ================================================================
+async function crearVacante(evento) {
+  evento.preventDefault();
+
+  const boton = document.getElementById('btn-crear-vacante');
+  const spinner = document.getElementById('spinner-crear');
+  const texto = document.getElementById('texto-btn-crear');
+  const errorBox = document.getElementById('v-error');
+  errorBox.classList.remove('visible');
+
+  const titulo = document.getElementById('v-titulo').value.trim();
+  const empresa = document.getElementById('v-empresa').value.trim();
+  const modalidad = document.getElementById('v-modalidad').value;
+  const nivel = document.getElementById('v-nivel').value;
+  const salarioMin = document.getElementById('v-salario-min').value;
+  const salarioMax = document.getElementById('v-salario-max').value;
+  const descripcion = document.getElementById('v-descripcion').value.trim();
+  const habilidades = document.getElementById('v-habilidades').value.trim();
+
+  // --- Validacion en el frontend (el backend tambien valida) ---
+  const mostrarError = (mensaje) => {
+    errorBox.textContent = mensaje;
+    errorBox.classList.add('visible');
+  };
+
+  if (!titulo) return mostrarError('El título es obligatorio.');
+  if (!modalidad) return mostrarError('Selecciona una modalidad.');
+  if (!nivel) return mostrarError('Selecciona un nivel educativo.');
+  if (salarioMin === '' || salarioMax === '') return mostrarError('Ingresa el rango salarial.');
+  if (Number(salarioMin) > Number(salarioMax)) {
+    return mostrarError('El salario mínimo no puede ser mayor que el máximo.');
+  }
+  if (!habilidades) return mostrarError('Agrega al menos una habilidad clave.');
+
+  boton.disabled = true;
+  spinner.classList.add('visible');
+  texto.textContent = 'Publicando...';
+
+  try {
+    const respuesta = await apiFetch('/api/vacantes', {
+      method: 'POST',
+      body: JSON.stringify({
+        titulo,
+        empresa,
+        modalidad,
+        nivel_educativo_requerido: nivel,
+        salario_min: Number(salarioMin),
+        salario_max: Number(salarioMax),
+        descripcion,
+        habilidades
+      })
+    });
+
+    if (!respuesta) return;
+
+    if (!respuesta.ok) {
+      mostrarError((respuesta.datos && respuesta.datos.mensaje) || 'No se pudo publicar la vacante.');
+      return;
+    }
+
+    mostrarToast(respuesta.datos.mensaje || 'Vacante publicada correctamente.', 'exito');
+    document.getElementById('form-vacante').reset();
+    cargarVacantes(); // refresca la tabla con la nueva vacante
+  } catch (error) {
+    console.error('[admin] Error al crear vacante:', error);
+    mostrarError('Ocurrió un error inesperado. Intenta de nuevo.');
+  } finally {
+    boton.disabled = false;
+    spinner.classList.remove('visible');
+    texto.textContent = 'Publicar vacante';
+  }
 }
 
 async function cargarVacantes() {
@@ -112,7 +188,7 @@ async function sincronizarVacantes() {
 
   boton.disabled = false;
   spinner.classList.remove('visible');
-  texto.textContent = '🔄 Sincronizar Vacantes';
+  texto.textContent = 'Sincronizar Vacantes';
 
   if (!respuesta) return;
 

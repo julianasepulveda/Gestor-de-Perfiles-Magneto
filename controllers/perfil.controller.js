@@ -14,10 +14,18 @@ const MINIMO_HABILIDADES = 3;
 // catalogo si todavia no existe. El truco "ON DUPLICATE KEY UPDATE
 // id = LAST_INSERT_ID(id)" hace que mysql nos devuelva el id correcto
 // tanto si la insertamos de nuevo como si ya existia.
+//
+// IMPORTANTE: recibe la MISMA conexion de la transaccion. LAST_INSERT_ID()
+// es un valor por-conexion en MySQL; si usaramos "pool.query" aqui la
+// consulta correria en OTRA conexion del pool y LAST_INSERT_ID() podria
+// devolver el id de una operacion ajena, corrompiendo habilidadId e
+// insertando una relacion con FK invalida -> la transaccion hace rollback
+// y el guardado "falla siempre / entra en bucle". Por eso se usa la
+// conexion de la transaccion.
 // --------------------------------------------------------------
-async function obtenerOCrearHabilidad(nombre) {
+async function obtenerOCrearHabilidad(conexion, nombre) {
   const nombreLimpio = nombre.trim();
-  const [resultado] = await pool.query(
+  const [resultado] = await conexion.query(
     'INSERT INTO habilidades (nombre) VALUES (?) ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id)',
     [nombreLimpio]
   );
@@ -134,31 +142,39 @@ async function obtenerPerfil(req, res) {
 // que sincronizar diffs registro por registro.
 // --------------------------------------------------------------
 async function guardarPerfil(req, res) {
+  const usuarioId = req.usuario.id;
+  const {
+    nivel_educativo,
+    resumen,
+    modalidad_preferida,
+    salario_esperado_min,
+    salario_esperado_max,
+    experiencias = [],
+    educaciones = [],
+    habilidades = []
+  } = req.body;
+
+  // Validacion minima en el backend (la validacion detallada campo a
+  // campo ya la hizo el frontend antes de dejar avanzar al usuario,
+  // pero el backend nunca debe confiar solo en eso).
+  //
+  // Se valida ANTES de pedir una conexion al pool: asi una peticion
+  // invalida no consume ni retiene conexiones del pool.
+  if (!nivel_educativo || !modalidad_preferida || !resumen) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'Por favor completa los campos obligatorios para continuar'
+    });
+  }
+
+  console.log('[guardarPerfil] Inicio. usuarioId=%s, experiencias=%d, educaciones=%d, habilidades=%d',
+    usuarioId, experiencias.length, educaciones.length, habilidades.length);
+
   const conexion = await pool.getConnection();
+  let transaccionAbierta = false;
   try {
-    const usuarioId = req.usuario.id;
-    const {
-      nivel_educativo,
-      resumen,
-      modalidad_preferida,
-      salario_esperado_min,
-      salario_esperado_max,
-      experiencias = [],
-      educaciones = [],
-      habilidades = []
-    } = req.body;
-
-    // Validacion minima en el backend (la validacion detallada campo a
-    // campo ya la hizo el frontend antes de dejar avanzar al usuario,
-    // pero el backend nunca debe confiar solo en eso).
-    if (!nivel_educativo || !modalidad_preferida || !resumen) {
-      return res.status(400).json({
-        ok: false,
-        mensaje: 'Por favor completa los campos obligatorios para continuar'
-      });
-    }
-
     await conexion.beginTransaction();
+    transaccionAbierta = true;
 
     // 1) Upsert de los datos basicos del perfil
     const [existentes] = await conexion.query('SELECT id FROM perfiles WHERE usuario_id = ?', [usuarioId]);
@@ -204,7 +220,7 @@ async function guardarPerfil(req, res) {
     await conexion.query('DELETE FROM perfil_habilidades WHERE perfil_id = ?', [perfilId]);
     for (const nombreHabilidad of habilidades) {
       if (!nombreHabilidad || !nombreHabilidad.trim()) continue;
-      const habilidadId = await obtenerOCrearHabilidad(nombreHabilidad);
+      const habilidadId = await obtenerOCrearHabilidad(conexion, nombreHabilidad);
       await conexion.query(
         'INSERT IGNORE INTO perfil_habilidades (perfil_id, habilidad_id) VALUES (?, ?)',
         [perfilId, habilidadId]
@@ -212,6 +228,8 @@ async function guardarPerfil(req, res) {
     }
 
     await conexion.commit();
+    transaccionAbierta = false;
+    console.log('[guardarPerfil] COMMIT exitoso. perfilId=%s, usuarioId=%s', perfilId, usuarioId);
 
     // Nota sobre "reevaluar automaticamente los criterios de match"
     // (3er criterio de HU-RF-002): en este proyecto el match NO se
@@ -222,13 +240,28 @@ async function guardarPerfil(req, res) {
     // recomendaciones automaticamente refleja los datos nuevos, sin
     // que tengamos que "recalcular y guardar" nada aparte.
 
-    return res.json({ ok: true, mensaje: 'Perfil actualizado correctamente' });
+    // Respuesta de exito explicita (HTTP 200 por defecto en res.json).
+    return res.status(200).json({ ok: true, mensaje: 'Perfil actualizado correctamente' });
 
   } catch (error) {
-    await conexion.rollback();
+    // Solo hacemos ROLLBACK si realmente hay una transaccion abierta.
+    // Hacer rollback sin transaccion activa lanza un segundo error que
+    // enmascara el original. Ademas envolvemos el rollback en su propio
+    // try/catch para que un fallo al revertir nunca tumbe la respuesta.
+    if (transaccionAbierta) {
+      try {
+        await conexion.rollback();
+      } catch (errorRollback) {
+        console.error('Error haciendo ROLLBACK en guardarPerfil():', errorRollback);
+      }
+    }
     console.error('Error en guardarPerfil():', error);
     return res.status(500).json({ ok: false, mensaje: 'No se pudo guardar tu perfil. Intenta de nuevo.' });
   } finally {
+    // La conexion SIEMPRE se devuelve al pool, haya o no error. Sin esto,
+    // cada guardado fallido "fugaria" una conexion y tras 10 intentos el
+    // pool se agota y toda la app se cuelga esperando conexion (otra causa
+    // del "bucle" / bloqueo percibido por el usuario).
     conexion.release();
   }
 }

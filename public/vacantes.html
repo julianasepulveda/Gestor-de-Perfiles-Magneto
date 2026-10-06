@@ -1,101 +1,130 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Vacantes recomendadas — Perfil 360 | Magneto</title>
-<link rel="icon" href="img/logo-perfil3601.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vacantes recomendadas — Perfil 360 | Magneto</title>
+  <link rel="icon" href="img/logo-perfil3601.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<nav class="navbar">
-  <a href="dashboard.html" class="navbar__logo">
-    <img src="img/logo-perfil3601.png" alt="Perfil 360" />
-    <span>Perfil 360</span>
-  </a>
-  <div class="navbar__links" id="navbar-links"></div>
-  <div id="widget-completitud"></div>
-  <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
-</nav>
+  <nav class="navbar">
+    <a href="dashboard.html" class="navbar__logo">
+      <img src="img/logo-perfil3601.png" alt="Perfil 360" />
+      <span>Perfil 360</span>
+    </a>
+    <div class="navbar__links" id="navbar-links"></div>
+    <div id="widget-completitud"></div>
+    <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
+  </nav>
 
-<div class="pagina-contenido">
-  <h1>Vacantes recomendadas para ti</h1>
-  <p class="descripcion-pagina">Ordenadas de mayor a menor coincidencia con tu perfil.</p>
+  <div class="pagina-contenido">
+    <h1>Vacantes recomendadas para ti</h1>
+    <p class="descripcion-pagina">Ordenadas de mayor a menor coincidencia con tu perfil.</p>
 
-  <div class="tarjeta">
-    <div class="filtros-barra">
-      <div class="filtro-campo">
-        <label>Modalidad</label>
-        <select id="filtro-modalidad">
-          <option value="">Todas</option>
-          <option value="remoto">Remoto</option>
-          <option value="presencial">Presencial</option>
-          <option value="hibrido">Híbrido</option>
-        </select>
+    <div class="tarjeta filtros-card">
+
+      <!-- Barra de busqueda principal, grande y moderna -->
+      <div class="buscador">
+        <span class="buscador__icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
+        <input type="text" id="buscador-texto" class="buscador__input"
+          placeholder="Busca por cargo o palabra clave (ej: Node.js, Analista, DevOps)..." autocomplete="off" />
+        <button class="buscador__btn" id="btn-buscar">Buscar</button>
       </div>
-      <div class="filtro-campo">
-        <label>Salario mínimo</label>
-        <input type="number" id="filtro-salario-min" placeholder="Ej: 2000000" />
+
+      <!-- Filtros avanzados -->
+      <div class="filtros-barra">
+        <div class="filtro-campo">
+          <label>Modalidad</label>
+          <select id="filtro-modalidad">
+            <option value="">Todas</option>
+            <option value="remoto">Remoto</option>
+            <option value="presencial">Presencial</option>
+            <option value="hibrido">Híbrido</option>
+          </select>
+        </div>
+        <div class="filtro-campo">
+          <label>Nivel educativo</label>
+          <select id="filtro-nivel">
+            <option value="">Todos</option>
+            <option value="bachiller">Bachiller</option>
+            <option value="tecnico">Técnico</option>
+            <option value="tecnologo">Tecnólogo</option>
+            <option value="pregrado">Pregrado</option>
+            <option value="posgrado">Posgrado</option>
+            <option value="maestria">Maestría</option>
+            <option value="doctorado">Doctorado</option>
+          </select>
+        </div>
+        <div class="filtro-campo">
+          <label>Salario mínimo (COP)</label>
+          <input type="number" id="filtro-salario-min" min="0" step="100000" placeholder="Ej: 2000000" />
+        </div>
+        <div class="filtro-campo">
+          <label>Salario máximo (COP)</label>
+          <input type="number" id="filtro-salario-max" min="0" step="100000" placeholder="Ej: 6000000" />
+        </div>
+        <div class="filtro-campo filtro-campo--acciones">
+          <button class="btn-filtrar" id="btn-aplicar-filtros">Aplicar filtros</button>
+          <button class="btn-secundario btn-limpiar" id="btn-limpiar-filtros" type="button">Limpiar</button>
+        </div>
       </div>
-      <div class="filtro-campo">
-        <label>Salario máximo</label>
-        <input type="number" id="filtro-salario-max" placeholder="Ej: 6000000" />
-      </div>
-      <div class="filtro-campo">
-        <label>Nivel educativo</label>
-        <select id="filtro-nivel">
-          <option value="">Todos</option>
-          <option value="bachiller">Bachiller</option>
-          <option value="tecnico">Técnico</option>
-          <option value="tecnologo">Tecnólogo</option>
-          <option value="pregrado">Pregrado</option>
-          <option value="posgrado">Posgrado</option>
-          <option value="maestria">Maestría</option>
-          <option value="doctorado">Doctorado</option>
-        </select>
-      </div>
-      <button class="btn-filtrar" id="btn-aplicar-filtros">Aplicar Filtros</button>
+
+      <div class="filtros-error" id="filtros-error"></div>
+    </div>
+
+    <div id="alerta-perfil-incompleto" class="alerta alerta--error" style="margin-bottom:20px;"></div>
+
+    <div id="contenedor-vacantes">
+      <div class="spinner-carga">Cargando vacantes...</div>
     </div>
   </div>
 
-  <div id="alerta-perfil-incompleto" class="alerta alerta--error" style="margin-bottom:20px;"></div>
+  <!-- Modal: detalle del match -->
+  <div class="modal-overlay" id="modal-match">
+    <div class="modal-card" style="max-width: 460px; text-align:left;">
+      <h3 id="match-titulo-vacante" style="text-align:center;">Detalle del match</h3>
+      <p style="text-align:center; margin-bottom: 4px;">
+        <span id="match-porcentaje-grande"
+          style="font-family:var(--fuente-titulos); font-size:32px; font-weight:700; color:var(--verde-oscuro);">0%</span>
+        <br><span style="font-size:13px; color:var(--gris-texto);">de coincidencia con tu perfil</span>
+      </p>
 
-  <div id="contenedor-vacantes">
-    <div class="spinner-carga">Cargando vacantes...</div>
-  </div>
-</div>
+      <div class="match-seccion">
+        <p class="match-seccion__titulo match-seccion__titulo--ok">Habilidades que coinciden</p>
+        <div class="skills-desglose" id="match-habilidades-ok"></div>
+      </div>
 
-<!-- Modal: detalle del match -->
-<div class="modal-overlay" id="modal-match">
-  <div class="modal-card" style="max-width: 460px; text-align:left;">
-    <h3 id="match-titulo-vacante" style="text-align:center;">Detalle del match</h3>
-    <p style="text-align:center; margin-bottom: 4px;">
-      <span id="match-porcentaje-grande" style="font-family:var(--fuente-titulos); font-size:32px; font-weight:700; color:var(--verde-oscuro);">0%</span>
-      <br><span style="font-size:13px; color:var(--gris-texto);">de coincidencia con tu perfil</span>
-    </p>
+      <div class="match-seccion">
+        <p class="match-seccion__titulo match-seccion__titulo--falta">Habilidades que te faltan</p>
+        <div class="skills-desglose" id="match-habilidades-falta"></div>
+      </div>
 
-    <div style="margin-top:18px;">
-      <p style="font-size:13px; font-weight:600; color:var(--azul); margin-bottom:6px;">✓ Habilidades que coinciden</p>
-      <div class="skills-desglose" id="match-habilidades-ok"></div>
+      <p id="match-nivel-educativo" style="margin-top:18px; font-size:13px; color:var(--gris-texto);"></p>
+      <p id="match-explicacion"
+        style="margin-top:10px; font-size:13px; color:var(--azul); font-style:italic; background:var(--verde-suave); padding:10px 12px; border-radius:8px;">
+      </p>
+      <p id="match-motor-usado" style="margin-top:8px; font-size:11px; color:var(--gris-texto); text-align:right;"></p>
+
+      <button class="btn-primario" id="btn-cerrar-match" style="margin-top:22px;">Cerrar</button>
     </div>
-
-    <div style="margin-top:18px;">
-      <p style="font-size:13px; font-weight:600; color:var(--azul); margin-bottom:6px;">✕ Habilidades que te faltan</p>
-      <div class="skills-desglose" id="match-habilidades-falta"></div>
-    </div>
-
-    <p id="match-nivel-educativo" style="margin-top:18px; font-size:13px; color:var(--gris-texto);"></p>
-    <p id="match-explicacion" style="margin-top:10px; font-size:13px; color:var(--azul); font-style:italic; background:var(--verde-suave); padding:10px 12px; border-radius:8px;"></p>
-    <p id="match-motor-usado" style="margin-top:8px; font-size:11px; color:var(--gris-texto); text-align:right;"></p>
-
-    <button class="btn-primario" id="btn-cerrar-match" style="margin-top:22px;">Cerrar</button>
   </div>
-</div>
 
-<script src="js/utils.js"></script>
-<script src="js/vacantes.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/vacantes.js"></script>
 </body>
+
 </html>

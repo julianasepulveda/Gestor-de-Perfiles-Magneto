@@ -16,12 +16,31 @@ function protegerPagina() {
   const token = localStorage.getItem('perfil360_token');
   const usuarioTexto = localStorage.getItem('perfil360_usuario');
 
-  if (!token || !usuarioTexto) {
+  // Se rechazan tanto los valores ausentes como los corruptos ('undefined'
+  // o 'null' guardados como texto). Antes, un token literal "undefined"
+  // pasaba este filtro y provocaba un 401 en cada peticion -> bucle de
+  // redireccion al login. Ahora cualquier dato invalido se limpia y se
+  // envia al usuario a login de forma limpia (sin reventar en JSON.parse).
+  const tokenValido = token && token !== 'undefined' && token !== 'null';
+  const usuarioValido = usuarioTexto && usuarioTexto !== 'undefined' && usuarioTexto !== 'null';
+
+  if (!tokenValido || !usuarioValido) {
+    localStorage.removeItem('perfil360_token');
+    localStorage.removeItem('perfil360_usuario');
     window.location.href = 'login.html';
     return null;
   }
 
-  return JSON.parse(usuarioTexto);
+  try {
+    return JSON.parse(usuarioTexto);
+  } catch (error) {
+    // Dato corrupto: lo limpiamos y mandamos a login en vez de dejar la
+    // pagina rota por una excepcion no capturada.
+    localStorage.removeItem('perfil360_token');
+    localStorage.removeItem('perfil360_usuario');
+    window.location.href = 'login.html';
+    return null;
+  }
 }
 
 // --------------------------------------------------------------
@@ -133,6 +152,35 @@ function mostrarMascotaGuia(destinoId, mensaje) {
   destino.innerHTML = `
     <img src="img/logo-perfil3601.png" alt="Perfil 360" class="mascota-flotante" />
     <div class="globo-texto">${mensaje}</div>
+  `;
+}
+
+// --------------------------------------------------------------
+// Mascota "limpia": solo la imagen flotando, sin globo de texto. Se usa
+// cuando el texto estatico rompia el layout; el mensaje ahora vive en el
+// titulo/subtitulo de la seccion, no en un globo sobre la mascota.
+// --------------------------------------------------------------
+function mostrarMascotaLimpia(destinoId) {
+  const destino = document.getElementById(destinoId);
+  if (!destino) return;
+  destino.innerHTML = `
+    <img src="img/logo-perfil3601.png" alt="Perfil 360" class="mascota-flotante mascota-img" />
+  `;
+}
+
+// --------------------------------------------------------------
+// Variante "pulgar arriba": mascota celebrando con una insignia de
+// check. Se usa cuando el perfil llega al 100% para reforzar el logro.
+// Ya no inyecta globo de texto (evita que rompa el layout).
+// --------------------------------------------------------------
+function mostrarMascotaPulgarArriba(destinoId) {
+  const destino = document.getElementById(destinoId);
+  if (!destino) return;
+  destino.innerHTML = `
+    <div class="mascota-celebra">
+      <img src="img/logo-perfil3601.png" alt="Perfil 360" class="mascota-flotante mascota-img" />
+      <span class="mascota-celebra__badge" aria-hidden="true">👍</span>
+    </div>
   `;
 }
 

@@ -2,13 +2,15 @@
 // Cubre HU-RF-002, HU-RF-003 (indirectamente, via el dashboard) y
 // HU-RNF-003 (validacion en tiempo real).
 
-const usuario = protegerPagina();
-if (usuario) {
-  construirNavbarCandidato('perfil.html');
-  activarBotonSalir();
-  renderizarWidgetCompletitud();
-  inicializarFormulario();
-}
+// IMPORTANTE: las constantes y el estado a nivel de modulo se declaran
+// ARRIBA, ANTES del bloque de arranque "if (usuario)". Antes estaban
+// declarados DESPUES de llamar a inicializarFormulario(), y como const/let
+// viven en la "zona muerta temporal" (TDZ) hasta la linea donde se declaran,
+// inicializarFormulario() reventaba con:
+//   "Cannot access 'TIPS_MASCOTA' before initialization"
+// Esa excepcion abortaba todo el arranque: el listener de submit nunca se
+// enganchaba, por lo que "Guardar" no hacia nada y el GET /api/perfil no se
+// completaba (de ahi la sensacion de "guardado atascado / barra no actualiza").
 
 const TIPS_MASCOTA = {
   1: '¡Empecemos! Cuéntame tu nivel educativo, tu modalidad preferida y un poco sobre ti.',
@@ -21,16 +23,88 @@ let pasoActual = 1;
 const TOTAL_PASOS = 4;
 let habilidadesActuales = []; // array de strings
 
+// Arranque de la pantalla: ya con todas las declaraciones disponibles.
+const usuario = protegerPagina();
+if (usuario) {
+  construirNavbarCandidato('perfil.html');
+  activarBotonSalir();
+  renderizarWidgetCompletitud();
+  inicializarFormulario();
+}
+
 async function inicializarFormulario() {
   configurarStepper();
   configurarFilasRepetibles();
   configurarChipsHabilidades();
   configurarValidacionTiempoReal();
-  mostrarMascotaGuia('mascota-guia-perfil', TIPS_MASCOTA[1]);
+  configurarProgresoEnVivo();
+  actualizarGloboMascota(TIPS_MASCOTA[1]);
 
   await cargarPerfilExistente();
 
+  // Primera medicion de la barra en vivo, ya con los datos cargados.
+  actualizarBarraEnVivo();
+
   document.getElementById('form-perfil').addEventListener('submit', guardarPerfil);
+}
+
+// ================================================================
+// BARRA DE COMPLETITUD EN VIVO (HU-RF-003)
+// Replica, en el frontend, la misma logica de 4 secciones (25% c/u)
+// que usa el backend en calcularCompletitud(), para que la barra
+// reaccione en tiempo real SIN tener que guardar en la base de datos.
+// ================================================================
+
+const MIN_HABILIDADES_VIVO = 3;
+
+function configurarProgresoEnVivo() {
+  const form = document.getElementById('form-perfil');
+  // "input" cubre texto/textarea/number; "change" cubre selects y date.
+  // Se escucha en el form (delegacion) para captar tambien las filas
+  // repetibles que se agregan dinamicamente despues.
+  form.addEventListener('input', actualizarBarraEnVivo);
+  form.addEventListener('change', actualizarBarraEnVivo);
+}
+
+function calcularCompletitudEnVivo() {
+  let secciones = 0;
+
+  // Seccion 1: datos basicos (nivel + modalidad + resumen con algo de texto)
+  const nivel = document.getElementById('nivel_educativo').value.trim();
+  const modalidad = document.getElementById('modalidad_preferida').value.trim();
+  const resumen = document.getElementById('resumen').value.trim();
+  if (nivel && modalidad && resumen) secciones++;
+
+  // Seccion 2: al menos una fila de educacion con sus requeridos llenos
+  if (hayFilaCompleta('[data-fila-educacion]')) secciones++;
+
+  // Seccion 3: al menos una fila de experiencia con sus requeridos llenos
+  if (hayFilaCompleta('[data-fila-experiencia]')) secciones++;
+
+  // Seccion 4: al menos 3 habilidades
+  if (habilidadesActuales.length >= MIN_HABILIDADES_VIVO) secciones++;
+
+  return secciones * 25;
+}
+
+// Devuelve true si existe al menos UNA fila del tipo dado con todos sus
+// campos "required" diligenciados (misma regla que usa el guardado).
+function hayFilaCompleta(selectorFila) {
+  const filas = document.querySelectorAll(selectorFila);
+  return Array.from(filas).some(fila => {
+    const requeridos = fila.querySelectorAll('[data-campo][required]');
+    if (requeridos.length === 0) return false;
+    return Array.from(requeridos).every(c => c.value.trim() !== '');
+  });
+}
+
+function actualizarBarraEnVivo() {
+  const porcentaje = calcularCompletitudEnVivo();
+  const barra = document.getElementById('barra-progreso-vivo');
+  const texto = document.getElementById('texto-progreso-vivo');
+  if (barra) barra.style.width = `${porcentaje}%`;
+  if (texto) texto.textContent = `${porcentaje}%`;
+  return porcentaje;
 }
 
 // ================================================================
@@ -60,7 +134,10 @@ function irAlPaso(numero) {
   if (numero < 1 || numero > TOTAL_PASOS) return;
   pasoActual = numero;
 
-  mostrarMascotaGuia('mascota-guia-perfil', TIPS_MASCOTA[pasoActual]);
+  // Mascota gamificada: actualiza su globo de texto y hace un pequeño salto
+  // cada vez que el usuario cambia de seccion.
+  actualizarGloboMascota(TIPS_MASCOTA[pasoActual]);
+  animarSaltoMascota();
 
   document.querySelectorAll('.paso-formulario').forEach(el => {
     el.classList.toggle('activo', Number(el.dataset.paso) === pasoActual);
@@ -75,6 +152,31 @@ function irAlPaso(numero) {
   document.getElementById('btn-anterior').style.visibility = pasoActual === 1 ? 'hidden' : 'visible';
   document.getElementById('btn-siguiente').style.display = pasoActual === TOTAL_PASOS ? 'none' : 'inline-block';
   document.getElementById('btn-guardar').style.display = pasoActual === TOTAL_PASOS ? 'inline-flex' : 'none';
+}
+
+// ================================================================
+// MASCOTA GAMIFICADA (lateral del formulario)
+// ================================================================
+
+// Actualiza el globo de texto breve que acompaña a la mascota.
+function actualizarGloboMascota(mensaje) {
+  const globo = document.getElementById('mascota-globo-perfil');
+  if (!globo) return;
+  globo.textContent = mensaje;
+  // Reinicia la animacion de aparicion del globo.
+  globo.classList.remove('visible');
+  // Forzar reflow para reiniciar la transicion.
+  void globo.offsetWidth;
+  globo.classList.add('visible');
+}
+
+// Pequeño salto + parpadeo de opacidad de la mascota al cambiar de seccion.
+function animarSaltoMascota() {
+  const mascota = document.getElementById('mascota-perfil');
+  if (!mascota) return;
+  mascota.classList.remove('mascota-salta');
+  void mascota.offsetWidth; // reflow para poder reiniciar la animacion
+  mascota.classList.add('mascota-salta');
 }
 
 // ================================================================
@@ -175,6 +277,7 @@ function agregarFila(tipo, datosIniciales = null) {
   fila.querySelector('[data-accion="quitar"]').addEventListener('click', () => {
     fila.remove();
     actualizarEstadoBotonSiguiente();
+    actualizarBarraEnVivo(); // quitar una fila puede bajar el %
   });
 
   const lista = document.getElementById(tipo === 'educacion' ? 'lista-educaciones' : 'lista-experiencias');
@@ -213,6 +316,10 @@ function quitarHabilidad(nombre) {
 }
 
 function renderizarChips() {
+  // Cada vez que cambia el set de habilidades, refrescamos la barra en vivo
+  // (la seccion 4 depende de tener >= 3 habilidades).
+  actualizarBarraEnVivo();
+
   const contenedor = document.getElementById('chips-habilidades');
   contenedor.innerHTML = '';
 
@@ -282,6 +389,37 @@ function recolectarFilas(selectorFila) {
   return resultado;
 }
 
+// Valida que el rango salarial sea coherente: si el usuario diligencia
+// ambos campos, el minimo no puede ser mayor que el maximo. Devuelve true
+// si el rango es valido. Marca los campos en rojo cuando hay error.
+function validarRangoSalarial(mostrarErrores = true) {
+  const campoMin = document.getElementById('salario_esperado_min');
+  const campoMax = document.getElementById('salario_esperado_max');
+
+  const minTexto = campoMin.value.trim();
+  const maxTexto = campoMax.value.trim();
+
+  // Si falta alguno de los dos, no hay rango que comparar: se considera valido.
+  if (minTexto === '' || maxTexto === '') {
+    if (mostrarErrores) {
+      marcarCampo(campoMin, true);
+      marcarCampo(campoMax, true);
+    }
+    return true;
+  }
+
+  const min = Number(minTexto);
+  const max = Number(maxTexto);
+  const rangoValido = !(Number.isFinite(min) && Number.isFinite(max) && min > max);
+
+  if (mostrarErrores) {
+    marcarCampo(campoMin, rangoValido);
+    marcarCampo(campoMax, rangoValido);
+  }
+
+  return rangoValido;
+}
+
 async function guardarPerfil(evento) {
   evento.preventDefault();
 
@@ -290,9 +428,24 @@ async function guardarPerfil(evento) {
     return;
   }
 
+  // Validacion de negocio: el salario minimo no puede superar al maximo.
+  // Si el rango es incoherente, bloqueamos el envio, llevamos al usuario
+  // al paso 1 (donde estan los campos de salario) y mostramos una alerta
+  // amigable, sin tocar al servidor.
+  if (!validarRangoSalarial(true)) {
+    irAlPaso(1);
+    mostrarToast('El salario mínimo no puede ser mayor que el máximo. Corrige el rango para continuar.', 'error');
+    return;
+  }
+
   const boton = document.getElementById('btn-guardar');
   const spinner = document.getElementById('spinner-guardar');
   const texto = document.getElementById('texto-btn-guardar');
+
+  // Cuando el guardado sale bien redirigimos al dashboard; en ese caso NO
+  // reactivamos el boton (evita que parpadee "clickeable" mientras se
+  // dispara la redireccion). Este flag controla ese comportamiento.
+  let redirigiendo = false;
 
   boton.disabled = true;
   spinner.classList.add('visible');
@@ -309,25 +462,66 @@ async function guardarPerfil(evento) {
     habilidades: habilidadesActuales
   };
 
-  const respuesta = await apiFetch('/api/perfil', { method: 'PUT', body: JSON.stringify(cuerpo) });
+  // Todo el flujo va dentro de try/finally: pase lo que pase (exito, error
+  // del servidor o excepcion de red), el boton y el spinner SIEMPRE se
+  // restablecen en el finally. Asi nunca queda "atascado" en "Guardando...".
+  try {
+    console.log('[perfil] Enviando PUT /api/perfil con:', cuerpo);
+    const respuesta = await apiFetch('/api/perfil', { method: 'PUT', body: JSON.stringify(cuerpo) });
 
-  boton.disabled = false;
-  spinner.classList.remove('visible');
-  texto.textContent = 'Guardar Perfil';
+    // apiFetch devuelve null cuando el backend respondio 401 (sesion
+    // expirada): en ese caso ya redirigio al login, no hay nada mas que hacer.
+    if (!respuesta) {
+      console.warn('[perfil] apiFetch devolvio null (probable 401 / sesion expirada).');
+      return;
+    }
 
-  if (!respuesta) return;
+    console.log('[perfil] Respuesta del servidor:', respuesta.status, respuesta.datos);
 
-  if (!respuesta.ok) {
-    mostrarToast(respuesta.datos.mensaje || 'No se pudo guardar tu perfil.', 'error');
-    return;
-  }
+    if (!respuesta.ok) {
+      console.error('[perfil] El guardado fallo. HTTP', respuesta.status, respuesta.datos);
+      mostrarToast((respuesta.datos && respuesta.datos.mensaje) || 'No se pudo guardar tu perfil.', 'error');
+      return;
+    }
 
-  mostrarToast(respuesta.datos.mensaje || 'Perfil actualizado correctamente', 'exito');
+    // --- Guardado exitoso (HTTP 200) -> actualizamos la UI ---
+    console.log('[perfil] Guardado OK. Actualizando barra de completitud.');
+    mostrarToast((respuesta.datos && respuesta.datos.mensaje) || 'Perfil actualizado correctamente', 'exito');
 
-  const completitud = await renderizarWidgetCompletitud();
-  if (completitud >= 100 && !localStorage.getItem('perfil360_confeti_100')) {
-    lanzarConfeti();
-    localStorage.setItem('perfil360_confeti_100', 'true');
-    mostrarMascotaGuia('mascota-guia-perfil', '🎉 ¡Tu perfil quedó 100% completo! Ya puedo recomendarte con toda precisión.');
+    const completitud = await renderizarWidgetCompletitud();
+    console.log('[perfil] Completitud recalculada:', completitud);
+
+    // Si el perfil quedo al 100%, celebramos antes de redirigir para que
+    // el usuario alcance a ver el confeti y el mensaje de la mascota.
+    let esperaRedireccion = 1200;
+    if (completitud >= 100 && !localStorage.getItem('perfil360_confeti_100')) {
+      lanzarConfeti();
+      localStorage.setItem('perfil360_confeti_100', 'true');
+      actualizarGloboMascota('¡Tu perfil quedó al 100%! Ya puedo recomendarte con toda precisión.');
+      animarSaltoMascota();
+      esperaRedireccion = 2600; // mas tiempo para disfrutar la celebracion
+    }
+
+    // Redireccion automatica al panel principal tras un exito (HU-RF-003).
+    // Dejamos un pequeño margen para que el toast de exito sea visible.
+    console.log('[perfil] Redirigiendo a dashboard.html en %d ms.', esperaRedireccion);
+    redirigiendo = true;
+    texto.textContent = 'Redirigiendo...';
+    setTimeout(() => { window.location.href = 'dashboard.html'; }, esperaRedireccion);
+    return; // evitamos reactivar el boton: ya nos vamos del formulario
+  } catch (error) {
+    // Manejo explicito de errores de red / excepciones inesperadas para
+    // evitar fallos silenciosos (ej. "Uncaught (in promise)").
+    console.error('[perfil] Error inesperado al guardar el perfil:', error);
+    mostrarToast('Ocurrió un error inesperado al guardar. Revisa tu conexión e intenta de nuevo.', 'error');
+  } finally {
+    // En caso de exito con redireccion, dejamos el boton deshabilitado y el
+    // spinner visible hasta que la navegacion ocurra. En cualquier otro caso
+    // (error / validacion) restauramos el boton para que pueda reintentar.
+    if (!redirigiendo) {
+      boton.disabled = false;
+      spinner.classList.remove('visible');
+      texto.textContent = 'Guardar Perfil';
+    }
   }
 }

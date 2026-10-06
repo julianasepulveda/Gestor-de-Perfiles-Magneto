@@ -112,7 +112,7 @@ function renderizarTableroKanban(postulaciones) {
     const items = postulaciones.filter(p => p.estado === columna.estado);
 
     const columnaDiv = document.createElement('div');
-    columnaDiv.className = 'kanban-columna';
+    columnaDiv.className = `kanban-columna kanban-columna--${columna.estado}`;
     columnaDiv.innerHTML = `
       <div class="kanban-columna__titulo">
         <span>${columna.titulo}</span>
@@ -120,12 +120,20 @@ function renderizarTableroKanban(postulaciones) {
       </div>
     `;
 
+    if (items.length === 0) {
+      const vacio = document.createElement('div');
+      vacio.className = 'kanban-columna__vacio';
+      vacio.textContent = 'Sin postulaciones';
+      columnaDiv.appendChild(vacio);
+    }
+
     items.forEach(item => {
       const tarjeta = document.createElement('div');
-      tarjeta.className = 'kanban-tarjeta';
+      tarjeta.className = `kanban-tarjeta kanban-tarjeta--${item.estado}`;
       tarjeta.innerHTML = `
         <h5>${item.titulo}</h5>
-        <p>${item.empresa} · ${item.modalidad}</p>
+        <p>${item.empresa} · <span style="text-transform:capitalize;">${item.modalidad}</span></p>
+        <span class="kanban-tarjeta__fecha">${new Date(item.actualizado_en).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })}</span>
       `;
       tarjeta.addEventListener('click', () => abrirDetalle(item.id));
       columnaDiv.appendChild(tarjeta);

@@ -10,17 +10,17 @@
    ========================================================== */
 
 :root {
-  --verde:        #0CBB4E;
+  --verde: #0CBB4E;
   --verde-oscuro: #099b40;
-  --verde-suave:  #E7F9EE;
-  --azul:         #142942;
-  --azul-suave:   #24405f;
-  --morado:       #6C5CE7;
-  --turquesa:     #17C3C0;
-  --blanco:       #FFFFFF;
-  --gris-texto:   #5B6472;
-  --gris-borde:   #E1E5EA;
-  --rojo-error:   #E4483B;
+  --verde-suave: #E7F9EE;
+  --azul: #142942;
+  --azul-suave: #24405f;
+  --morado: #6C5CE7;
+  --turquesa: #17C3C0;
+  --blanco: #FFFFFF;
+  --gris-texto: #5B6472;
+  --gris-borde: #E1E5EA;
+  --rojo-error: #E4483B;
 
   --fuente-titulos: 'Poppins', sans-serif;
   --fuente-cuerpo: 'Inter', sans-serif;
@@ -29,9 +29,12 @@
   --sombra: 0 20px 45px -20px rgba(20, 41, 66, 0.35);
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+}
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -49,8 +52,13 @@ html, body {
 }
 
 @media (max-width: 900px) {
-  .auth-screen { grid-template-columns: 1fr; }
-  .auth-screen__brand { display: none; }
+  .auth-screen {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-screen__brand {
+    display: none;
+  }
 }
 
 /* ---------- Panel izquierdo: marca / ilustracion ---------- */
@@ -72,7 +80,7 @@ html, body {
   width: 480px;
   height: 480px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(23,195,192,0.28), transparent 70%);
+  background: radial-gradient(circle, rgba(23, 195, 192, 0.28), transparent 70%);
   top: -160px;
   right: -160px;
 }
@@ -83,7 +91,7 @@ html, body {
   width: 360px;
   height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(108,92,231,0.25), transparent 70%);
+  background: radial-gradient(circle, rgba(108, 92, 231, 0.25), transparent 70%);
   bottom: -140px;
   left: -120px;
 }
@@ -96,13 +104,17 @@ html, body {
   gap: 12px;
 }
 
-.brand-top img { width: 42px; height: auto; }
+.brand-top img {
+  width: 42px;
+  height: auto;
+}
+
 .brand-top span {
   font-family: var(--fuente-titulos);
   font-weight: 600;
   font-size: 15px;
   letter-spacing: 0.4px;
-  color: rgba(255,255,255,0.85);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .brand-hero {
@@ -114,7 +126,7 @@ html, body {
 .brand-hero img.mascota {
   width: 160px;
   margin-bottom: 28px;
-  filter: drop-shadow(0 18px 30px rgba(0,0,0,0.28));
+  filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.28));
 }
 
 .brand-hero h1 {
@@ -128,7 +140,7 @@ html, body {
 .brand-hero p {
   font-size: 15.5px;
   line-height: 1.6;
-  color: rgba(255,255,255,0.8);
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
 }
 
@@ -138,7 +150,7 @@ html, body {
   display: flex;
   gap: 28px;
   font-size: 13px;
-  color: rgba(255,255,255,0.65);
+  color: rgba(255, 255, 255, 0.65);
 }
 
 .brand-footer strong {
@@ -171,7 +183,10 @@ html, body {
   margin-bottom: 28px;
 }
 
-.auth-card__logo img { width: 34px; }
+.auth-card__logo img {
+  width: 34px;
+}
+
 .auth-card__logo span {
   font-family: var(--fuente-titulos);
   font-weight: 700;
@@ -221,7 +236,9 @@ html, body {
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.campo input::placeholder { color: #A7AFBA; }
+.campo input::placeholder {
+  color: #A7AFBA;
+}
 
 .campo input:focus {
   outline: none;
@@ -248,7 +265,9 @@ html, body {
   display: flex;
 }
 
-.campo__toggle-pass:hover { color: var(--azul); }
+.campo__toggle-pass:hover {
+  color: var(--azul);
+}
 
 .campo__ayuda {
   font-size: 12.5px;
@@ -263,7 +282,9 @@ html, body {
   display: none;
 }
 
-.campo__error-msg.visible { display: block; }
+.campo__error-msg.visible {
+  display: block;
+}
 
 .btn-primario {
   width: 100%;
@@ -284,26 +305,55 @@ html, body {
   gap: 8px;
 }
 
-.btn-primario:hover { background: var(--verde-oscuro); }
-.btn-primario:active { transform: translateY(1px); }
+.btn-primario:hover {
+  background: var(--verde-oscuro);
+}
+
+.btn-primario:active {
+  transform: translateY(1px);
+}
+
 .btn-primario:disabled {
   background: #A9E2C0;
   cursor: not-allowed;
 }
 
+/* CTA "Editar Perfil" del dashboard: hereda el estilo primario pero como
+   es un <a>, quitamos el subrayado, lo separamos del contenido superior y
+   le damos un realce sutil para que destaque como accion principal. */
+.btn-editar-perfil {
+  text-decoration: none;
+  margin-top: 20px;
+  box-shadow: 0 6px 16px rgba(12, 187, 78, 0.28);
+}
+
+.btn-editar-perfil:hover {
+  transform: translateY(-1px);
+}
+
+.btn-editar-perfil svg {
+  flex: 0 0 auto;
+}
+
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   border-top-color: var(--blanco);
   border-radius: 50%;
   animation: girar 0.7s linear infinite;
   display: none;
 }
 
-.spinner.visible { display: inline-block; }
+.spinner.visible {
+  display: inline-block;
+}
 
-@keyframes girar { to { transform: rotate(360deg); } }
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .alerta {
   display: none;
@@ -316,7 +366,9 @@ html, body {
   line-height: 1.4;
 }
 
-.alerta.visible { display: flex; }
+.alerta.visible {
+  display: flex;
+}
 
 .alerta--error {
   background: #FDECEA;
@@ -343,7 +395,9 @@ html, body {
   text-decoration: none;
 }
 
-.auth-card__pie a:hover { text-decoration: underline; }
+.auth-card__pie a:hover {
+  text-decoration: underline;
+}
 
 /* ---------- Modal de exito (registro) ---------- */
 
@@ -358,7 +412,9 @@ html, body {
   padding: 20px;
 }
 
-.modal-overlay.visible { display: flex; }
+.modal-overlay.visible {
+  display: flex;
+}
 
 .modal-card {
   background: var(--blanco);
@@ -372,8 +428,15 @@ html, body {
 }
 
 @keyframes aparecer {
-  from { opacity: 0; transform: translateY(10px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .modal-card__icono {
@@ -422,7 +485,10 @@ html, body {
   text-align: center;
 }
 
-.panel-simple__card img { width: 70px; margin-bottom: 18px; }
+.panel-simple__card img {
+  width: 70px;
+  margin-bottom: 18px;
+}
 
 .panel-simple__card h1 {
   font-family: var(--fuente-titulos);
@@ -461,7 +527,9 @@ html, body {
   cursor: pointer;
 }
 
-.btn-secundario:hover { border-color: var(--azul); }
+.btn-secundario:hover {
+  border-color: var(--azul);
+}
 
 /* ==========================================================
    Barra de navegacion superior (paginas internas)
@@ -485,8 +553,16 @@ html, body {
   gap: 10px;
   text-decoration: none;
 }
-.navbar__logo img { width: 30px; transition: transform .2s ease; }
-.navbar__logo:hover img { transform: rotate(-8deg) scale(1.1); }
+
+.navbar__logo img {
+  width: 30px;
+  transition: transform .2s ease;
+}
+
+.navbar__logo:hover img {
+  transform: rotate(-8deg) scale(1.1);
+}
+
 .navbar__logo span {
   font-family: var(--fuente-titulos);
   font-weight: 700;
@@ -510,8 +586,15 @@ html, body {
   transition: background .15s ease, color .15s ease;
 }
 
-.navbar__links a:hover { background: var(--verde-suave); color: var(--verde-oscuro); }
-.navbar__links a.activo { background: var(--verde-suave); color: var(--verde-oscuro); }
+.navbar__links a:hover {
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
+
+.navbar__links a.activo {
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
 
 .navbar__salir {
   background: none;
@@ -524,7 +607,10 @@ html, body {
   cursor: pointer;
   font-family: var(--fuente-cuerpo);
 }
-.navbar__salir:hover { border-color: var(--azul); }
+
+.navbar__salir:hover {
+  border-color: var(--azul);
+}
 
 .pagina-contenido {
   max-width: 1100px;
@@ -538,7 +624,8 @@ html, body {
   color: var(--azul);
   margin: 0 0 6px;
 }
-.pagina-contenido > p.descripcion-pagina {
+
+.pagina-contenido>p.descripcion-pagina {
   color: var(--gris-texto);
   font-size: 14.5px;
   margin: 0 0 28px;
@@ -661,17 +748,28 @@ html, body {
   color: var(--blanco);
 }
 
-.paso-formulario { display: none; }
-.paso-formulario.activo { display: block; }
+.paso-formulario {
+  display: none;
+}
+
+.paso-formulario.activo {
+  display: block;
+}
 
 .fila-doble {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
 }
-@media (max-width: 700px) { .fila-doble { grid-template-columns: 1fr; } }
 
-.campo select, .campo textarea {
+@media (max-width: 700px) {
+  .fila-doble {
+    grid-template-columns: 1fr;
+  }
+}
+
+.campo select,
+.campo textarea {
   width: 100%;
   padding: 13px 14px;
   border: 1.5px solid var(--gris-borde);
@@ -681,8 +779,14 @@ html, body {
   color: var(--azul);
   background: #FBFCFD;
 }
-.campo textarea { resize: vertical; min-height: 80px; }
-.campo select:focus, .campo textarea:focus {
+
+.campo textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.campo select:focus,
+.campo textarea:focus {
   outline: none;
   border-color: var(--verde);
   box-shadow: 0 0 0 4px rgba(12, 187, 78, 0.14);
@@ -726,7 +830,11 @@ html, body {
   cursor: pointer;
   width: 100%;
 }
-.btn-agregar:hover { border-color: var(--verde); background: var(--verde-suave); }
+
+.btn-agregar:hover {
+  border-color: var(--verde);
+  background: var(--verde-suave);
+}
 
 .chips-contenedor {
   display: flex;
@@ -764,7 +872,12 @@ html, body {
   gap: 12px;
   margin-top: 24px;
 }
-.stepper-botones .btn-secundario, .stepper-botones .btn-primario { width: auto; padding: 12px 24px; }
+
+.stepper-botones .btn-secundario,
+.stepper-botones .btn-primario {
+  width: auto;
+  padding: 12px 24px;
+}
 
 /* ==========================================================
    Filtros de vacantes (HU-RF-008)
@@ -777,9 +890,21 @@ html, body {
   align-items: flex-end;
 }
 
-.filtro-campo { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
-.filtro-campo label { font-size: 12.5px; font-weight: 600; color: var(--azul); }
-.filtro-campo select, .filtro-campo input {
+.filtro-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 160px;
+}
+
+.filtro-campo label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--azul);
+}
+
+.filtro-campo select,
+.filtro-campo input {
   padding: 10px 12px;
   border: 1.5px solid var(--gris-borde);
   border-radius: 8px;
@@ -797,7 +922,10 @@ html, body {
   font-size: 13.5px;
   cursor: pointer;
 }
-.btn-filtrar:hover { background: var(--verde-oscuro); }
+
+.btn-filtrar:hover {
+  background: var(--verde-oscuro);
+}
 
 /* ==========================================================
    Tarjetas de vacantes recomendadas (HU-RF-006)
@@ -814,7 +942,11 @@ html, body {
   margin-bottom: 14px;
   transition: box-shadow .15s ease, border-color .15s ease;
 }
-.vacante-card:hover { box-shadow: var(--sombra); border-color: transparent; }
+
+.vacante-card:hover {
+  box-shadow: var(--sombra);
+  border-color: transparent;
+}
 
 .vacante-card__info h4 {
   font-family: var(--fuente-titulos);
@@ -822,6 +954,7 @@ html, body {
   color: var(--azul);
   margin: 0 0 4px;
 }
+
 .vacante-card__meta {
   font-size: 13px;
   color: var(--gris-texto);
@@ -834,6 +967,7 @@ html, body {
   text-align: center;
   min-width: 90px;
 }
+
 .match-circulo {
   width: 58px;
   height: 58px;
@@ -847,15 +981,25 @@ html, body {
   color: var(--blanco);
   margin: 0 auto 6px;
 }
-.match-alto { background: linear-gradient(135deg, var(--verde), var(--turquesa)); }
-.match-medio { background: linear-gradient(135deg, #F5A623, #F7C948); }
-.match-bajo { background: linear-gradient(135deg, #C4CBD4, #9AA4B1); }
+
+.match-alto {
+  background: linear-gradient(135deg, var(--verde), var(--turquesa));
+}
+
+.match-medio {
+  background: linear-gradient(135deg, #F5A623, #F7C948);
+}
+
+.match-bajo {
+  background: linear-gradient(135deg, #C4CBD4, #9AA4B1);
+}
 
 .vacante-card__acciones {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
+
 .btn-chico {
   padding: 8px 14px;
   border-radius: 8px;
@@ -864,29 +1008,76 @@ html, body {
   cursor: pointer;
   white-space: nowrap;
 }
-.btn-chico.primario { background: var(--verde); color: var(--blanco); border: none; }
-.btn-chico.primario:hover { background: var(--verde-oscuro); }
-.btn-chico.secundario { background: none; border: 1.5px solid var(--gris-borde); color: var(--azul); }
-.btn-chico.secundario:hover { border-color: var(--azul); }
-.btn-chico:disabled { opacity: 0.55; cursor: not-allowed; }
 
-.skills-desglose { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.skill-chip { padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
-.skill-chip--ok { background: var(--verde-suave); color: var(--verde-oscuro); }
-.skill-chip--falta { background: #FDECEA; color: #B3271A; }
+.btn-chico.primario {
+  background: var(--verde);
+  color: var(--blanco);
+  border: none;
+}
+
+.btn-chico.primario:hover {
+  background: var(--verde-oscuro);
+}
+
+.btn-chico.secundario {
+  background: none;
+  border: 1.5px solid var(--gris-borde);
+  color: var(--azul);
+}
+
+.btn-chico.secundario:hover {
+  border-color: var(--azul);
+}
+
+.btn-chico:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.skills-desglose {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.skill-chip {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.skill-chip--ok {
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
+
+.skill-chip--falta {
+  background: #FDECEA;
+  color: #B3271A;
+}
 
 .estado-vacio {
   text-align: center;
   padding: 50px 20px;
   color: var(--gris-texto);
 }
-.estado-vacio svg { margin-bottom: 14px; opacity: 0.5; }
+
+.estado-vacio svg {
+  margin-bottom: 14px;
+  opacity: 0.5;
+}
 
 /* ==========================================================
    Tabla de administracion de vacantes (HU-RF-005)
    ========================================================== */
 
-.tabla-simple { width: 100%; border-collapse: collapse; }
+.tabla-simple {
+  width: 100%;
+  border-collapse: collapse;
+}
+
 .tabla-simple th {
   text-align: left;
   font-size: 12.5px;
@@ -896,6 +1087,7 @@ html, body {
   padding: 10px 14px;
   border-bottom: 2px solid var(--gris-borde);
 }
+
 .tabla-simple td {
   padding: 14px;
   border-bottom: 1px solid var(--gris-borde);
@@ -909,8 +1101,16 @@ html, body {
   font-size: 12px;
   font-weight: 600;
 }
-.badge-estado--activa { background: var(--verde-suave); color: var(--verde-oscuro); }
-.badge-estado--inactiva { background: #F1F3F5; color: var(--gris-texto); }
+
+.badge-estado--activa {
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
+
+.badge-estado--inactiva {
+  background: #F1F3F5;
+  color: var(--gris-texto);
+}
 
 .interruptor {
   position: relative;
@@ -918,24 +1118,41 @@ html, body {
   height: 24px;
   display: inline-block;
 }
-.interruptor input { opacity: 0; width: 0; height: 0; }
+
+.interruptor input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
 .interruptor__deslizador {
-  position: absolute; cursor: pointer; inset: 0;
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
   background-color: #C4CBD4;
   border-radius: 999px;
   transition: .2s;
 }
+
 .interruptor__deslizador::before {
   position: absolute;
   content: "";
-  height: 18px; width: 18px;
-  left: 3px; bottom: 3px;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
   background-color: white;
   border-radius: 50%;
   transition: .2s;
 }
-.interruptor input:checked + .interruptor__deslizador { background-color: var(--verde); }
-.interruptor input:checked + .interruptor__deslizador::before { transform: translateX(18px); }
+
+.interruptor input:checked+.interruptor__deslizador {
+  background-color: var(--verde);
+}
+
+.interruptor input:checked+.interruptor__deslizador::before {
+  transform: translateX(18px);
+}
 
 /* ==========================================================
    Tablero Kanban de postulaciones (HU-RF-007)
@@ -948,7 +1165,12 @@ html, body {
   overflow-x: auto;
   padding-bottom: 10px;
 }
-@media (max-width: 1000px) { .kanban { grid-template-columns: repeat(5, 240px); } }
+
+@media (max-width: 1000px) {
+  .kanban {
+    grid-template-columns: repeat(5, 240px);
+  }
+}
 
 .kanban-columna {
   background: #F7F9FA;
@@ -985,13 +1207,18 @@ html, body {
   cursor: pointer;
   transition: box-shadow .15s ease;
 }
-.kanban-tarjeta:hover { box-shadow: var(--sombra); }
+
+.kanban-tarjeta:hover {
+  box-shadow: var(--sombra);
+}
+
 .kanban-tarjeta h5 {
   font-family: var(--fuente-titulos);
   font-size: 13.5px;
   color: var(--azul);
   margin: 0 0 4px;
 }
+
 .kanban-tarjeta p {
   font-size: 12px;
   color: var(--gris-texto);
@@ -1000,43 +1227,85 @@ html, body {
 
 /* Panel lateral de detalle de postulacion */
 .panel-lateral-overlay {
-  position: fixed; inset: 0;
-  background: rgba(20,41,66,0.4);
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 41, 66, 0.4);
   display: none;
   z-index: 60;
 }
-.panel-lateral-overlay.visible { display: block; }
+
+.panel-lateral-overlay.visible {
+  display: block;
+}
 
 .panel-lateral {
   position: fixed;
-  top: 0; right: 0;
+  top: 0;
+  right: 0;
   height: 100vh;
   width: 380px;
   max-width: 90vw;
   background: var(--blanco);
-  box-shadow: -10px 0 30px rgba(0,0,0,0.15);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
   padding: 30px 26px;
   overflow-y: auto;
   transform: translateX(100%);
   transition: transform .25s ease;
 }
-.panel-lateral-overlay.visible .panel-lateral { transform: translateX(0); }
+
+.panel-lateral-overlay.visible .panel-lateral {
+  transform: translateX(0);
+}
 
 .panel-lateral__cerrar {
-  background: none; border: none; cursor: pointer;
-  font-size: 20px; color: var(--gris-texto);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  color: var(--gris-texto);
   float: right;
 }
 
-.timeline-historial { margin-top: 20px; display: flex; flex-direction: column; gap: 18px; }
-.timeline-item { position: relative; padding-left: 20px; border-left: 2px solid var(--gris-borde); }
-.timeline-item::before {
-  content: ""; position: absolute; left: -6px; top: 2px;
-  width: 10px; height: 10px; border-radius: 50%; background: var(--verde);
+.timeline-historial {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
 }
-.timeline-item__fecha { font-size: 11.5px; color: var(--gris-texto); }
-.timeline-item__estado { font-family: var(--fuente-titulos); font-size: 13.5px; color: var(--azul); margin: 2px 0; }
-.timeline-item__motivo { font-size: 12.5px; color: var(--gris-texto); }
+
+.timeline-item {
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px solid var(--gris-borde);
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -6px;
+  top: 2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--verde);
+}
+
+.timeline-item__fecha {
+  font-size: 11.5px;
+  color: var(--gris-texto);
+}
+
+.timeline-item__estado {
+  font-family: var(--fuente-titulos);
+  font-size: 13.5px;
+  color: var(--azul);
+  margin: 2px 0;
+}
+
+.timeline-item__motivo {
+  font-size: 12.5px;
+  color: var(--gris-texto);
+}
 
 /* ==========================================================
    Toasts (notificaciones flotantes reutilizables)
@@ -1051,6 +1320,7 @@ html, body {
   flex-direction: column;
   gap: 10px;
 }
+
 .toast {
   padding: 14px 18px;
   border-radius: 10px;
@@ -1062,9 +1332,21 @@ html, body {
   transition: opacity .25s ease, transform .25s ease;
   max-width: 320px;
 }
-.toast--visible { opacity: 1; transform: translateY(0); }
-.toast--exito { background: var(--verde); color: var(--blanco); }
-.toast--error { background: #E4483B; color: var(--blanco); }
+
+.toast--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast--exito {
+  background: var(--verde);
+  color: var(--blanco);
+}
+
+.toast--error {
+  background: #E4483B;
+  color: var(--blanco);
+}
 
 .spinner-carga {
   display: flex;
@@ -1084,29 +1366,51 @@ html, body {
    ========================================================== */
 
 @keyframes flotar {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-8px) rotate(2deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
 }
 
 @keyframes aparecer-globo {
-  from { opacity: 0; transform: scale(0.85) translateY(6px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .mascota-flotante {
   animation: flotar 3.2s ease-in-out infinite;
 }
 
-.mascota-guia {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  margin-bottom: 22px;
+/* Fix de proporciones: el logo-mascota SIEMPRE conserva su relacion de
+   aspecto. width fijo + height auto + object-fit:contain evitan que un
+   contenedor flex lo estire o aplaste. Se aplica a todas las mascotas. */
+.mascota-img,
+.mascota-guia img,
+.mascota-flotante {
+  width: 100px;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
 }
 
-.mascota-guia img {
-  width: 54px;
-  flex-shrink: 0;
+.mascota-guia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
 }
 
 .globo-texto {
@@ -1127,7 +1431,7 @@ html, body {
   width: 46px;
   pointer-events: none;
   animation: flotar 3.2s ease-in-out infinite;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.15));
 }
 
 /* ==========================================================
@@ -1147,7 +1451,10 @@ html, body {
   text-decoration: none;
   transition: transform .15s ease;
 }
-.widget-completitud:hover { transform: scale(1.03); }
+
+.widget-completitud:hover {
+  transform: scale(1.03);
+}
 
 .widget-completitud__mascota-track {
   position: relative;
@@ -1161,7 +1468,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 6px;
-  background: rgba(12,187,78,0.18);
+  background: rgba(12, 187, 78, 0.18);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -1179,7 +1486,7 @@ html, body {
   width: 22px;
   height: 22px;
   transition: left .5s ease;
-  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.2));
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.2));
 }
 
 .widget-completitud__texto {
@@ -1220,7 +1527,9 @@ html, body {
   border-color: var(--verde);
 }
 
-.logro-chip .logro-icono { font-size: 14px; }
+.logro-chip .logro-icono {
+  font-size: 14px;
+}
 
 /* ==========================================================
    CONFETI (celebracion al llegar a 100% o postular)
@@ -1237,7 +1546,10 @@ html, body {
 }
 
 @keyframes caer-confeti {
-  to { transform: translateY(105vh) rotate(540deg); opacity: 0.4; }
+  to {
+    transform: translateY(105vh) rotate(540deg);
+    opacity: 0.4;
+  }
 }
 
 /* ==========================================================
@@ -1260,6 +1572,7 @@ html, body {
   font-weight: 600;
   cursor: pointer;
 }
+
 .toggle-vista-btn.activo {
   background: var(--verde);
   border-color: var(--verde);
@@ -1271,28 +1584,794 @@ html, body {
   align-items: center;
   gap: 10px;
 }
-.tabla-postulaciones-fila-vacante img { width: 26px; }
+
+.tabla-postulaciones-fila-vacante img {
+  width: 26px;
+}
 
 /* ==========================================================
    Micro-interacciones generales (menos estatico)
    ========================================================== */
 
 @keyframes aparecer-suave {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.pagina-contenido, .auth-card, .tarjeta {
+.pagina-contenido,
+.auth-card,
+.tarjeta {
   animation: aparecer-suave .35s ease;
 }
 
-.vacante-card, .kanban-tarjeta, .logro-chip {
+.vacante-card,
+.kanban-tarjeta,
+.logro-chip {
   transition: transform .15s ease, box-shadow .15s ease;
 }
-.vacante-card:hover { transform: translateY(-2px); }
-.kanban-tarjeta:hover { transform: translateY(-2px) scale(1.01); }
 
-.btn-primario, .btn-chico, .btn-filtrar {
+.vacante-card:hover {
+  transform: translateY(-2px);
+}
+
+.kanban-tarjeta:hover {
+  transform: translateY(-2px) scale(1.01);
+}
+
+.btn-primario,
+.btn-chico,
+.btn-filtrar {
   transition: transform .12s ease, background .15s ease;
 }
-.btn-primario:active, .btn-chico:active { transform: scale(0.97); }
+
+.btn-primario:active,
+.btn-chico:active {
+  transform: scale(0.97);
+}
+
+/* ==========================================================
+   SECCION "SUGERENCIAS PARA DESTACAR" (HU-RF-003)
+   Panel destacado y gamificado que convierte el arreglo
+   "faltantes" del backend en recomendaciones motivadoras.
+   ========================================================== */
+
+.sugerencias-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #E3F3EA;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(23, 195, 192, 0.10) 0%, rgba(23, 195, 192, 0) 45%),
+    var(--blanco);
+}
+
+/* Franja de acento a la izquierda que da el aire "destacado" */
+.sugerencias-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--verde), var(--turquesa));
+}
+
+.sugerencias-card--completo {
+  border-color: #BBE9CC;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(12, 187, 78, 0.12) 0%, rgba(12, 187, 78, 0) 50%),
+    var(--verde-suave);
+}
+
+.sugerencias-card__cabecera {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.sugerencias-card__mascota {
+  position: relative;
+  flex: 0 0 auto;
+  width: 72px;
+  display: flex;
+  justify-content: center;
+}
+
+/* La mascota de la tarjeta mantiene proporciones (ver .mascota-img) pero
+   a un tamaño mas contenido para la cabecera. */
+.sugerencias-card__mascota .mascota-img {
+  width: 68px;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.14));
+}
+
+.sugerencias-card__titulo {
+  font-family: var(--fuente-titulos);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--azul);
+  margin: 2px 0 4px;
+}
+
+.sugerencias-card__subtitulo {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin: 0;
+  line-height: 1.45;
+}
+
+.sugerencias-lista {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+/* --- Acordeon de sugerencias (clicable, con explicabilidad) --- */
+.sugerencia-acordeon {
+  border: 1px solid var(--gris-borde);
+  border-radius: 14px;
+  background: var(--blanco);
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.05);
+  overflow: hidden;
+  transition: box-shadow .2s ease, border-color .2s ease;
+  animation: aparecer-suave .3s ease;
+}
+
+.sugerencia-acordeon:hover {
+  border-color: var(--verde);
+  box-shadow: 0 10px 22px rgba(12, 187, 78, 0.12);
+}
+
+.sugerencia-acordeon.abierto {
+  border-color: var(--verde);
+  box-shadow: 0 10px 24px rgba(12, 187, 78, 0.16);
+}
+
+/* Encabezado clicable (es un <button>, por eso reseteamos estilos) */
+.sugerencia-acordeon__cabecera {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--fuente-cuerpo);
+}
+
+.sugerencia-acordeon--ok .sugerencia-acordeon__cabecera {
+  cursor: default;
+}
+
+.sugerencia-acordeon__icono {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
+
+.sugerencia-acordeon__icono svg {
+  width: 21px;
+  height: 21px;
+}
+
+.sugerencia-acordeon--ok .sugerencia-acordeon__icono {
+  background: var(--verde);
+  color: var(--blanco);
+}
+
+.sugerencia-acordeon__titulos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sugerencia-acordeon__titulos strong {
+  font-family: var(--fuente-titulos);
+  font-size: 14px;
+  color: var(--azul);
+}
+
+.sugerencia-acordeon__titulos span {
+  font-size: 12.8px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+}
+
+.sugerencia-acordeon__chevron {
+  flex: 0 0 auto;
+  color: var(--gris-texto);
+  display: flex;
+  transition: transform .25s ease, color .2s ease;
+}
+
+.sugerencia-acordeon__chevron svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sugerencia-acordeon.abierto .sugerencia-acordeon__chevron {
+  transform: rotate(180deg);
+  color: var(--verde-oscuro);
+}
+
+/* Panel desplegable con el "por que" (explicabilidad / HU-RF-003) */
+.sugerencia-acordeon__panel {
+  padding: 0 16px 15px 69px;
+  animation: aparecer-suave .25s ease;
+}
+
+.sugerencia-acordeon__panel p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--azul);
+  background: var(--verde-suave);
+  border-radius: 10px;
+  padding: 11px 13px;
+}
+
+.sugerencia-acordeon__porque-label {
+  display: block;
+  font-family: var(--fuente-titulos);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--verde-oscuro);
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+/* "Celebra": mascota flotando con una insignia de pulgar arriba */
+.mascota-celebra {
+  position: relative;
+  display: inline-flex;
+}
+
+.mascota-celebra__badge {
+  position: absolute;
+  right: -6px;
+  bottom: -2px;
+  font-size: 22px;
+  animation: flotar 2.6s ease-in-out infinite;
+}
+
+/* ==========================================================
+   FASE 2 — FORMULARIO DE PERFIL
+   Layout de dos columnas (mascota lateral + formulario),
+   campos mas grandes/accesibles y mascota gamificada.
+   ========================================================== */
+
+.perfil-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 28px;
+  align-items: start;
+  max-width: 1040px;
+}
+
+.perfil-main {
+  min-width: 0;
+  /* evita que el grid desborde con contenidos anchos */
+}
+
+/* --- Columna lateral: mascota + progreso en vivo --- */
+.perfil-aside {
+  position: sticky;
+  top: 92px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  background: linear-gradient(160deg, var(--blanco) 0%, var(--verde-suave) 140%);
+  border: 1px solid #E3F3EA;
+  border-radius: 18px;
+  padding: 24px 20px;
+  box-shadow: 0 10px 28px rgba(20, 41, 66, 0.07);
+}
+
+.perfil-aside__mascota {
+  display: flex;
+  justify-content: center;
+}
+
+/* Mascota: tamaño fijo y proporciones intactas (object-fit en .mascota-img) */
+.perfil-aside__mascota .mascota-img {
+  width: 120px;
+  filter: drop-shadow(0 8px 14px rgba(20, 41, 66, 0.16));
+  animation: flotar 3.2s ease-in-out infinite;
+}
+
+/* Salto + parpadeo de opacidad al cambiar de seccion */
+@keyframes mascota-salto {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.75;
+  }
+
+  35% {
+    transform: translateY(-16px) scale(1.05);
+    opacity: 1;
+  }
+
+  70% {
+    transform: translateY(0) scale(0.98);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* La animacion de salto tiene prioridad sobre el "flotar" mientras dura */
+.perfil-aside__mascota .mascota-img.mascota-salta {
+  animation: mascota-salto .6s ease;
+}
+
+/* Globo de texto breve de la mascota */
+.perfil-aside__globo {
+  position: relative;
+  background: var(--azul);
+  color: var(--blanco);
+  font-size: 12.8px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  padding: 11px 14px;
+  border-radius: 14px;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+.perfil-aside__globo.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Piquito del globo apuntando hacia la mascota (arriba) */
+.perfil-aside__globo::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 7px solid var(--azul);
+}
+
+.perfil-aside__progreso {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.perfil-aside__nota {
+  font-size: 11.5px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+  margin: 10px 0 0;
+  text-align: center;
+}
+
+/* --- Campos mas grandes y accesibles (solo dentro del form de perfil) --- */
+#form-perfil .campo input,
+#form-perfil .campo select,
+#form-perfil .campo textarea {
+  padding: 15px 16px;
+  font-size: 15.5px;
+  border-radius: 12px;
+}
+
+#form-perfil .campo textarea {
+  min-height: 110px;
+}
+
+#form-perfil .campo label {
+  font-size: 14px;
+  margin-bottom: 9px;
+}
+
+/* --- Responsive: en pantallas angostas, la mascota pasa arriba --- */
+@media (max-width: 820px) {
+  .perfil-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .perfil-aside {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 16px;
+  }
+
+  .perfil-aside__mascota .mascota-img {
+    width: 84px;
+  }
+
+  .perfil-aside__globo {
+    flex: 1 1 180px;
+    width: auto;
+    text-align: left;
+  }
+
+  .perfil-aside__globo::before {
+    left: 20px;
+  }
+
+  .perfil-aside__progreso {
+    flex: 1 1 100%;
+  }
+}
+
+/* ==========================================================
+   FASE 3 — BUSCADOR Y FILTROS DE VACANTES (HU-RF-008)
+   ========================================================== */
+
+.filtros-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- Barra de busqueda principal, grande y moderna --- */
+.buscador {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #FBFCFD;
+  border: 1.5px solid var(--gris-borde);
+  border-radius: 14px;
+  padding: 6px 6px 6px 16px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.buscador:focus-within {
+  border-color: var(--verde);
+  box-shadow: 0 0 0 4px rgba(12, 187, 78, 0.14);
+  background: var(--blanco);
+}
+
+.buscador__icono {
+  display: flex;
+  color: var(--gris-texto);
+  flex: 0 0 auto;
+}
+
+.buscador__icono svg {
+  width: 22px;
+  height: 22px;
+}
+
+.buscador__input {
+  flex: 1 1 auto;
+  border: none;
+  background: none;
+  outline: none;
+  font-size: 16px;
+  font-family: var(--fuente-cuerpo);
+  color: var(--azul);
+  padding: 12px 0;
+}
+
+.buscador__input::placeholder {
+  color: #9AA4B1;
+}
+
+.buscador__btn {
+  flex: 0 0 auto;
+  background: var(--verde);
+  color: var(--blanco);
+  border: none;
+  border-radius: 10px;
+  padding: 13px 26px;
+  font-family: var(--fuente-titulos);
+  font-weight: 600;
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.buscador__btn:hover {
+  background: var(--verde-oscuro);
+}
+
+/* --- Acciones y validacion de los filtros --- */
+.filtro-campo--acciones {
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: auto;
+}
+
+.btn-limpiar {
+  width: auto;
+  padding: 11px 18px;
+  font-size: 13.5px;
+}
+
+.filtros-error {
+  display: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: #B3271A;
+  background: #FDECEA;
+  border: 1px solid #F5C6C0;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+
+.filtros-error.visible {
+  display: block;
+}
+
+/* Campos de salario en error */
+.filtro-campo input.campo--error {
+  border-color: #E4483B;
+  box-shadow: 0 0 0 3px rgba(228, 72, 59, 0.15);
+}
+
+/* --- Iconos de la meta-info de cada tarjeta de vacante --- */
+.vacante-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.meta-icono {
+  width: 15px;
+  height: 15px;
+  color: var(--verde-oscuro);
+  flex: 0 0 auto;
+}
+
+/* ==========================================================
+   FASE 3 — MODAL DE DETALLE DEL MATCH (explicabilidad)
+   ========================================================== */
+
+.match-seccion {
+  margin-top: 18px;
+}
+
+.match-seccion__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.match-seccion__titulo::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.match-seccion__titulo--ok {
+  color: var(--verde-oscuro);
+}
+
+.match-seccion__titulo--ok::before {
+  background: var(--verde);
+}
+
+.match-seccion__titulo--falta {
+  color: #B3271A;
+}
+
+.match-seccion__titulo--falta::before {
+  background: #E4483B;
+}
+
+/* Linea de nivel educativo con color segun cumple/no cumple */
+.match-nivel {
+  margin-top: 18px;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-radius: 8px;
+}
+
+.match-nivel--ok {
+  color: var(--verde-oscuro);
+  background: var(--verde-suave);
+}
+
+.match-nivel--no {
+  color: #B3271A;
+  background: #FDECEA;
+}
+
+@media (max-width: 640px) {
+  .buscador {
+    flex-wrap: wrap;
+  }
+
+  .buscador__btn {
+    width: 100%;
+  }
+
+  .filtro-campo {
+    min-width: 100%;
+  }
+
+  .filtro-campo--acciones {
+    flex-wrap: wrap;
+  }
+}
+
+/* ==========================================================
+   FASE 4 — PANEL ADMIN: formulario de creacion de vacante
+   ========================================================== */
+
+.admin-layout {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-form-card {
+  position: sticky;
+  top: 92px;
+}
+
+.admin-form-card__titulo {
+  font-family: var(--fuente-titulos);
+  font-size: 18px;
+  color: var(--azul);
+  margin: 0 0 4px;
+}
+
+.admin-form-card__sub {
+  font-size: 12.8px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+  margin: 0 0 18px;
+}
+
+.admin-form-card .btn-primario {
+  margin-top: 6px;
+}
+
+.admin-tabla-wrap {
+  min-width: 0;
+}
+
+@media (max-width: 920px) {
+  .admin-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form-card {
+    position: static;
+  }
+}
+
+/* ==========================================================
+   FASE 4 — TABLERO KANBAN: colorimetria por estado (Magneto)
+   ========================================================== */
+
+/* Cada columna lleva una franja superior de color segun su estado */
+.kanban-columna {
+  border-top: 4px solid var(--gris-borde);
+}
+
+.kanban-columna--postulado {
+  border-top-color: var(--turquesa);
+}
+
+.kanban-columna--en_revision {
+  border-top-color: var(--morado);
+}
+
+.kanban-columna--entrevista {
+  border-top-color: #F5A623;
+}
+
+.kanban-columna--aceptado {
+  border-top-color: var(--verde);
+}
+
+.kanban-columna--descartado {
+  border-top-color: #E4483B;
+}
+
+/* Punto de color junto al titulo de cada columna */
+.kanban-columna__titulo span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.kanban-columna__titulo span:first-child::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--gris-borde);
+}
+
+.kanban-columna--postulado .kanban-columna__titulo span:first-child::before {
+  background: var(--turquesa);
+}
+
+.kanban-columna--en_revision .kanban-columna__titulo span:first-child::before {
+  background: var(--morado);
+}
+
+.kanban-columna--entrevista .kanban-columna__titulo span:first-child::before {
+  background: #F5A623;
+}
+
+.kanban-columna--aceptado .kanban-columna__titulo span:first-child::before {
+  background: var(--verde);
+}
+
+.kanban-columna--descartado .kanban-columna__titulo span:first-child::before {
+  background: #E4483B;
+}
+
+/* Borde izquierdo de cada tarjeta segun su estado */
+.kanban-tarjeta {
+  border-left: 3px solid transparent;
+}
+
+.kanban-tarjeta--postulado {
+  border-left-color: var(--turquesa);
+}
+
+.kanban-tarjeta--en_revision {
+  border-left-color: var(--morado);
+}
+
+.kanban-tarjeta--entrevista {
+  border-left-color: #F5A623;
+}
+
+.kanban-tarjeta--aceptado {
+  border-left-color: var(--verde);
+}
+
+.kanban-tarjeta--descartado {
+  border-left-color: #E4483B;
+}
+
+.kanban-tarjeta__fecha {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gris-texto);
+}
+
+.kanban-columna__vacio {
+  font-size: 12px;
+  color: #AEB6C0;
+  text-align: center;
+  padding: 18px 6px;
+  border: 1px dashed var(--gris-borde);
+  border-radius: 10px;
+}

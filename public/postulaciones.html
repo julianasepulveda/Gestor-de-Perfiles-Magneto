@@ -1,54 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Mis postulaciones — Perfil 360 | Magneto</title>
-<link rel="icon" href="img/logo-perfil3601.png" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mis postulaciones — Perfil 360 | Magneto</title>
+  <link rel="icon" href="img/logo-perfil3601.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
 
-<nav class="navbar">
-  <a href="dashboard.html" class="navbar__logo">
-    <img src="img/logo-perfil3601.png" alt="Perfil 360" />
-    <span>Perfil 360</span>
-  </a>
-  <div class="navbar__links" id="navbar-links"></div>
-  <div id="widget-completitud"></div>
-  <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
-</nav>
+  <nav class="navbar">
+    <a href="dashboard.html" class="navbar__logo">
+      <img src="img/logo-perfil3601.png" alt="Perfil 360" />
+      <span>Perfil 360</span>
+    </a>
+    <div class="navbar__links" id="navbar-links"></div>
+    <div id="widget-completitud"></div>
+    <button class="navbar__salir" id="btn-salir">Cerrar sesión</button>
+  </nav>
 
-<div class="pagina-contenido" style="max-width: 1200px;">
-  <h1>Mi tablero de postulaciones</h1>
-  <p class="descripcion-pagina">Haz clic en cualquier tarjeta para ver el detalle y el motivo del estado actual.</p>
+  <div class="pagina-contenido" style="max-width: 1200px;">
+    <h1>Mi tablero de postulaciones</h1>
+    <p class="descripcion-pagina">Haz clic en cualquier tarjeta para ver el detalle y el motivo del estado actual.</p>
 
-  <div class="postulaciones-toggle-vista">
-    <button class="toggle-vista-btn activo" id="btn-vista-tablero">🗂️ Tablero</button>
-    <button class="toggle-vista-btn" id="btn-vista-tabla">📋 Tabla</button>
+    <div class="postulaciones-toggle-vista">
+      <button class="toggle-vista-btn activo" id="btn-vista-tablero">Tablero</button>
+      <button class="toggle-vista-btn" id="btn-vista-tabla">Tabla</button>
+    </div>
+
+    <div id="contenedor-tablero">
+      <div class="spinner-carga">Cargando tus postulaciones...</div>
+    </div>
   </div>
 
-  <div id="contenedor-tablero">
-    <div class="spinner-carga">Cargando tus postulaciones...</div>
+  <!-- Panel lateral de detalle -->
+  <div class="panel-lateral-overlay" id="overlay-detalle">
+    <div class="panel-lateral">
+      <button class="panel-lateral__cerrar" id="btn-cerrar-detalle">✕</button>
+      <h3 id="detalle-titulo-vacante" style="font-family:var(--fuente-titulos); color:var(--azul); margin: 10px 0 2px;">
+      </h3>
+      <p id="detalle-empresa-modalidad" style="font-size:13px; color:var(--gris-texto); margin:0 0 16px;"></p>
+      <span class="badge-estado" id="detalle-badge-estado"></span>
+
+      <p style="font-size:13px; font-weight:600; color:var(--azul); margin-top:22px;">Historial del proceso</p>
+      <div class="timeline-historial" id="detalle-historial"></div>
+    </div>
   </div>
-</div>
 
-<!-- Panel lateral de detalle -->
-<div class="panel-lateral-overlay" id="overlay-detalle">
-  <div class="panel-lateral">
-    <button class="panel-lateral__cerrar" id="btn-cerrar-detalle">✕</button>
-    <h3 id="detalle-titulo-vacante" style="font-family:var(--fuente-titulos); color:var(--azul); margin: 10px 0 2px;"></h3>
-    <p id="detalle-empresa-modalidad" style="font-size:13px; color:var(--gris-texto); margin:0 0 16px;"></p>
-    <span class="badge-estado" id="detalle-badge-estado"></span>
-
-    <p style="font-size:13px; font-weight:600; color:var(--azul); margin-top:22px;">Historial del proceso</p>
-    <div class="timeline-historial" id="detalle-historial"></div>
-  </div>
-</div>
-
-<script src="js/utils.js"></script>
-<script src="js/postulaciones.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/postulaciones.js"></script>
 </body>
+
 </html>

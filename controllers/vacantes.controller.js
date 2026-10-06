@@ -84,6 +84,24 @@ const VACANTES_DE_EJEMPLO = [
     nivel_educativo_requerido: 'pregrado',
     descripcion: 'Construir funcionalidades end-to-end en un producto SaaS en crecimiento.',
     habilidades: ['Node.js', 'React', 'MySQL', 'Docker', 'Git', 'JavaScript']
+  },
+  {
+    titulo: 'Ingeniero(a) DevOps',
+    modalidad: 'remoto',
+    salario_min: 6000000,
+    salario_max: 9500000,
+    nivel_educativo_requerido: 'pregrado',
+    descripcion: 'Automatizar despliegues, administrar infraestructura en la nube y pipelines CI/CD.',
+    habilidades: ['Docker', 'Kubernetes', 'AWS', 'Linux', 'Git', 'CI/CD']
+  },
+  {
+    titulo: 'Científico(a) de Datos',
+    modalidad: 'hibrido',
+    salario_min: 5000000,
+    salario_max: 8000000,
+    nivel_educativo_requerido: 'posgrado',
+    descripcion: 'Diseñar modelos de machine learning y análisis predictivo para el negocio.',
+    habilidades: ['Python', 'Machine Learning', 'SQL', 'Pandas', 'Estadística']
   }
 ];
 
@@ -162,6 +180,100 @@ async function sincronizarVacantes(req, res) {
   }
 }
 
+const MODALIDADES_VALIDAS = ['remoto', 'presencial', 'hibrido'];
+const NIVELES_VALIDOS = ['bachiller', 'tecnico', 'tecnologo', 'pregrado', 'posgrado', 'maestria', 'doctorado'];
+
+// --------------------------------------------------------------
+// POST /api/vacantes   (solo admin) — Modulo de Administrador (seccion 6)
+// Crea una vacante manualmente desde el panel, con estado 'activa', y
+// conecta sus habilidades clave (recibidas como texto separado por comas).
+// --------------------------------------------------------------
+async function crearVacante(req, res) {
+  const {
+    titulo,
+    empresa,
+    modalidad,
+    salario_min,
+    salario_max,
+    nivel_educativo_requerido,
+    descripcion,
+    habilidades // string separado por comas, o arreglo de strings
+  } = req.body;
+
+  // --- Validacion de entrada ---
+  if (!titulo || !titulo.trim()) {
+    return res.status(400).json({ ok: false, mensaje: 'El título de la vacante es obligatorio.' });
+  }
+  if (!MODALIDADES_VALIDAS.includes(modalidad)) {
+    return res.status(400).json({ ok: false, mensaje: 'Selecciona una modalidad válida.' });
+  }
+  if (!NIVELES_VALIDOS.includes(nivel_educativo_requerido)) {
+    return res.status(400).json({ ok: false, mensaje: 'Selecciona un nivel educativo válido.' });
+  }
+
+  const salMin = Number(salario_min);
+  const salMax = Number(salario_max);
+  if (!Number.isFinite(salMin) || !Number.isFinite(salMax) || salMin < 0 || salMax < 0) {
+    return res.status(400).json({ ok: false, mensaje: 'Ingresa un rango salarial válido.' });
+  }
+  if (salMin > salMax) {
+    return res.status(400).json({ ok: false, mensaje: 'El salario mínimo no puede ser mayor que el máximo.' });
+  }
+
+  // Normalizamos las habilidades: aceptamos texto "A, B, C" o un arreglo.
+  const listaHabilidades = (Array.isArray(habilidades)
+    ? habilidades
+    : String(habilidades || '').split(','))
+    .map(h => h.trim())
+    .filter(h => h.length > 0);
+
+  const conexion = await pool.getConnection();
+  let transaccionAbierta = false;
+  try {
+    await conexion.beginTransaction();
+    transaccionAbierta = true;
+
+    const [resultado] = await conexion.query(
+      `INSERT INTO vacantes (titulo, empresa, modalidad, salario_min, salario_max, nivel_educativo_requerido, descripcion, estado, publicada_por, fuente)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'activa', ?, 'manual')`,
+      [
+        titulo.trim(),
+        (empresa && empresa.trim()) || 'Magneto',
+        modalidad,
+        salMin,
+        salMax,
+        nivel_educativo_requerido,
+        (descripcion && descripcion.trim()) || 'Vacante publicada manualmente desde el panel de administración.',
+        req.usuario.id
+      ]
+    );
+    const vacanteId = resultado.insertId;
+
+    for (const nombreHabilidad of listaHabilidades) {
+      const habilidadId = await obtenerOCrearHabilidad(conexion, nombreHabilidad);
+      await conexion.query(
+        'INSERT IGNORE INTO vacante_habilidades (vacante_id, habilidad_id) VALUES (?, ?)',
+        [vacanteId, habilidadId]
+      );
+    }
+
+    await conexion.commit();
+    transaccionAbierta = false;
+    console.log('[crearVacante] Vacante creada id=%s por admin=%s', vacanteId, req.usuario.id);
+
+    return res.status(201).json({ ok: true, mensaje: 'Vacante publicada correctamente.', id: vacanteId });
+
+  } catch (error) {
+    if (transaccionAbierta) {
+      try { await conexion.rollback(); } catch (e) { console.error('Error en ROLLBACK crearVacante():', e); }
+    }
+    console.error('Error en crearVacante():', error);
+    return res.status(500).json({ ok: false, mensaje: 'No se pudo publicar la vacante. Intenta de nuevo.' });
+  } finally {
+    conexion.release();
+  }
+}
+
 // --------------------------------------------------------------
 // GET /api/vacantes/admin   (solo admin) — HU-RF-005
 // --------------------------------------------------------------
@@ -234,7 +346,7 @@ function calcularMatch(habilidadesCandidato, nivelEducativoCandidato, habilidade
 
   const explicacion = habilidadesVacante.length > 0
     ? `Cumples ${coincidentes.length} de ${habilidadesVacante.length} habilidades requeridas` +
-      `${cumpleEducacion ? ', y tu nivel educativo cumple lo que pide la vacante.' : ', aunque tu nivel educativo no alcanza el requerido.'}`
+    `${cumpleEducacion ? ', y tu nivel educativo cumple lo que pide la vacante.' : ', aunque tu nivel educativo no alcanza el requerido.'}`
     : 'Esta vacante no especifica habilidades puntuales, así que el match se basa solo en tu nivel educativo.';
 
   return { porcentaje, coincidentes, faltantes, cumpleEducacion, explicacion, motor: 'algoritmo' };
@@ -355,7 +467,7 @@ async function obtenerMatch(habilidadesCandidato, nivelEducativoCandidato, habil
 async function listarRecomendadas(req, res) {
   try {
     const usuarioId = req.usuario.id;
-    const { modalidad, salario_min, salario_max, nivel_educativo } = req.query;
+    const { modalidad, salario_min, salario_max, nivel_educativo, buscar } = req.query;
 
     // 1) Traer el perfil y habilidades del candidato
     const [perfiles] = await pool.query('SELECT * FROM perfiles WHERE usuario_id = ?', [usuarioId]);
@@ -363,10 +475,10 @@ async function listarRecomendadas(req, res) {
 
     const [habilidadesPerfil] = perfil
       ? await pool.query(
-          `SELECT h.nombre FROM habilidades h
+        `SELECT h.nombre FROM habilidades h
            INNER JOIN perfil_habilidades ph ON ph.habilidad_id = h.id
            WHERE ph.perfil_id = ?`, [perfil.id]
-        )
+      )
       : [[]];
 
     const nombresHabilidadesCandidato = habilidadesPerfil.map(h => h.nombre);
@@ -391,6 +503,13 @@ async function listarRecomendadas(req, res) {
     if (nivel_educativo) {
       sql += ' AND nivel_educativo_requerido = ?';
       params.push(nivel_educativo);
+    }
+    // Busqueda por palabra clave en titulo o descripcion. Se usa LIKE con
+    // parametros ligados (?) para evitar inyeccion SQL.
+    if (buscar && buscar.trim()) {
+      sql += ' AND (titulo LIKE ? OR descripcion LIKE ?)';
+      const comodin = `%${buscar.trim()}%`;
+      params.push(comodin, comodin);
     }
 
     const [vacantes] = await pool.query(sql, params);
@@ -448,10 +567,10 @@ async function obtenerDetalleMatch(req, res) {
 
     const [habilidadesPerfil] = perfil
       ? await pool.query(
-          `SELECT h.nombre FROM habilidades h
+        `SELECT h.nombre FROM habilidades h
            INNER JOIN perfil_habilidades ph ON ph.habilidad_id = h.id
            WHERE ph.perfil_id = ?`, [perfil.id]
-        )
+      )
       : [[]];
 
     const [habilidadesVacante] = await pool.query(
@@ -489,6 +608,7 @@ async function obtenerDetalleMatch(req, res) {
 
 module.exports = {
   sincronizarVacantes,
+  crearVacante,
   listarVacantesAdmin,
   cambiarEstadoVacante,
   listarRecomendadas,
