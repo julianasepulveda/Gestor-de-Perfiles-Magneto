@@ -60,13 +60,8 @@ gestor-perfiles-magneto/
 
 ---
 
-## 1. Requisitos previos
 
-- Node.js 18+
-- MySQL (o MariaDB) corriendo localmente
-- VS Code
-
-## 2. Configurar la base de datos
+##  Configurar la base de datos
 
 Ejecuta el script completo en tu cliente de MySQL:
 
@@ -77,17 +72,9 @@ mysql -u root -p < db/schema.sql
 Esto crea la base `perfil360` y las 10 tablas del sistema (usuarios,
 perfiles, experiencias, educaciones, habilidades, vacantes, postulaciones,
 sus tablas de relación, e historial).
-
-**Buena práctica de seguridad**: en vez de usar el usuario `root` para la
-app, crea un usuario dedicado con permisos solo sobre esta base:
-
-```sql
-CREATE USER 'perfil360app'@'localhost' IDENTIFIED BY 'una_clave_segura_tuya';
-GRANT ALL PRIVILEGES ON perfil360.* TO 'perfil360app'@'localhost';
-FLUSH PRIVILEGES;
 ```
 
-## 3. Configurar `.env`
+## Configurar `.env`
 
 Copia `.env.example` a `.env` y coloca tus datos reales:
 
@@ -138,12 +125,6 @@ prueba:
 5. Presiona **"Postular"** en alguna vacante.
 6. Ve a **"Postulaciones"** → verás tu tablero Kanban con la tarjeta en
    la columna "Postulado". Haz clic en la tarjeta para ver el detalle.
-7. (Opcional, para ver el tablero "moverse") Vuelve a MySQL y ejecuta
-   manualmente un cambio de estado, o usa la ruta
-   `PATCH /api/postulaciones/:id/estado` con Postman/Thunder Client
-   estando logueado como admin, con body
-   `{ "estado": "entrevista", "motivo": "..." }`.
-
 ---
 
 ## Decisiones de arquitectura
@@ -165,7 +146,8 @@ El valor central del proyecto es la *explicabilidad*. Un cálculo
 determinístico (80% del puntaje según habilidades coincidentes, 20%
 según si el nivel educativo cumple lo requerido) es 100% auditable,
 gratis, instantáneo, y no depende de un servicio externo que podría
-fallar o tener rate limits el día de la sustentación.
+fallar.
+
 
 **Sincronización de vacantes simulada.** No existe una API pública de
 Magneto para estudiantes, así que `POST /api/vacantes/sincronizar`
@@ -175,24 +157,3 @@ exactamente el mismo efecto que tendría una integración real, sin
 depender de credenciales de terceros.
 
 ---
-
-## Historias de usuario cubiertas
-
-| Historia | Estado |
-|---|---|
-| HU-RF-001 Registro e inicio de sesión | ✅ |
-| HU-RF-002 Gestionar perfil profesional | ✅ |
-| HU-RF-003 Completitud del perfil con retroalimentación | ✅ |
-| HU-RF-004 Cargar y sincronizar vacantes (simulado) | ✅ |
-| HU-RF-005 Consultar y administrar vacantes | ✅ |
-| HU-RF-006 Recomendar vacantes con explicación del match | ✅ |
-| HU-RF-007 Verificar estado de la postulación (tablero) | ✅ |
-| HU-RF-008 Filtrar vacantes por criterios clave | ✅ |
-| HU-RF-009 Postular a una vacante | ✅ |
-| HU-RNF-001 Rendimiento del cálculo de match | ✅ (ver nota) |
-| HU-RNF-002 Cifrado y trazabilidad | ✅ |
-| HU-RNF-003 Validación en tiempo real | ✅ |
-| HU-RNF-004 Confirmar antes de eliminar/pausar | ✅ |
-
-Ver `ESTADO-HISTORIAS-DE-USUARIO.md` para el detalle de cómo se cumple
-cada criterio de aceptación, uno por uno.
