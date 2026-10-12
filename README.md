@@ -99,11 +99,7 @@ DB_PASSWORD=una_clave_segura_tuya
 DB_NAME=perfil360
 PORT=3000
 JWT_SECRET=un_texto_secreto_largo_e_inventado_por_ti
-```
 
-⚠️ **Nunca subas tu `.env` real a GitHub** (ya está en `.gitignore`). Si
-en algún momento tu `.env` quedó expuesto públicamente, cambia esa
-contraseña de MySQL de inmediato.
 
 ## 4. Instalar dependencias y correr
 
@@ -114,7 +110,7 @@ npm start        # o: npm run dev  (con reinicio automático)
 
 Abre `http://localhost:3000` → te redirige al login.
 
-## 5. Crear tu primera cuenta de administrador
+## 5. Crea tu primera cuenta de administrador si decides ver la funcionalidad de añadir vacantes
 
 Por diseño, **todo registro nuevo se crea como `candidato`** (así lo pide
 la historia de usuario de registro). Para tener una cuenta `admin` de
