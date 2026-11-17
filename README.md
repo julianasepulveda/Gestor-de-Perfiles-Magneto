@@ -250,3 +250,16 @@ sincronizar y crear vacantes, y cambiar su estado (activa/inactiva).
 - Consultas SQL parametrizadas en todo el acceso a datos para prevenir inyección.
 - Los secretos (claves, credenciales) se gestionan por variables de entorno y
   nunca se versionan.
+
+---
+
+## 10. Integrantes del equipo
+
+| Nombre completo | Rol / Aportes |
+|---|---|
+| _Nombre del integrante 1_ | _Rol / módulos trabajados_ |
+| _Nombre del integrante 2_ | _Rol / módulos trabajados_ |
+| _Nombre del integrante 3_ | _Rol / módulos trabajados_ |
+
+> Proyecto desarrollado para el curso de Ingeniería de Software.
+
