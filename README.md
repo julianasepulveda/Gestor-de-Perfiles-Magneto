@@ -255,11 +255,12 @@ sincronizar y crear vacantes, y cambiar su estado (activa/inactiva).
 
 ## 10. Integrantes del equipo
 
-| Nombre completo | Rol / Aportes |
-|---|---|
-| _Nombre del integrante 1_ | _Rol / módulos trabajados_ |
-| _Nombre del integrante 2_ | _Rol / módulos trabajados_ |
-| _Nombre del integrante 3_ | _Rol / módulos trabajados_ |
+| Nombre completo |
+
+| David Alzate Monroy |
+| Juliana Sepúlveda|
+|Stephanie Jaramillo Alzate|
+|Sebastián Andrés Ibarra Prada|
 
 > Proyecto desarrollado para el curso de Ingeniería de Software.
 
