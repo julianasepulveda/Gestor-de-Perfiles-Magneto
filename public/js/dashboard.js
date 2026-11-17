@@ -27,10 +27,10 @@ if (usuario) {
 }
 
 const LOGROS = [
-  { minimo: 1, icono: '🌱', texto: 'Perfil iniciado' },
-  { minimo: 50, icono: '🚀', texto: 'A mitad de camino' },
-  { minimo: 75, icono: '⭐', texto: 'Casi listo' },
-  { minimo: 100, icono: '🏆', texto: '¡Perfil completo!' }
+  { minimo: 1, icono: '<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-7"/><path d="M12 14c0-3.3-2.7-6-6-6H4v2c0 3.3 2.7 6 6 6h2"/><path d="M12 11c0-3.3 2.7-6 6-6h2v1c0 3.3-2.7 6-6 6h-2"/></svg>', texto: 'Perfil iniciado' },
+  { minimo: 50, icono: '<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2 0-2.8a2 2 0 0 0-3 0Z"/><path d="M12 15 9 12a11 11 0 0 1 8-9 11 11 0 0 1-2 8l-3 3Z"/><path d="M9 12H5s.5-2.8 2-4c1.6-1.4 5-1 5-1"/><path d="M12 15v4s2.8-.5 4-2c1.4-1.3 1-5 1-5"/></svg>', texto: 'A mitad de camino' },
+  { minimo: 75, icono: '<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 3 7 7 .5-5.5 4.5 2 7-6.5-4-6.5 4 2-7L2 9.5 9 9Z"/></svg>', texto: 'Casi listo' },
+  { minimo: 100, icono: '<svg class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M6 3h12v5a6 6 0 0 1-12 0Z"/><path d="M9 20h6"/><path d="M12 14v6"/></svg>', texto: '¡Perfil completo!' }
 ];
 
 // Catalogo de sugerencias motivadoras. Cada entrada define palabras clave

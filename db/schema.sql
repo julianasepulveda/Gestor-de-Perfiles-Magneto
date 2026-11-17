@@ -119,7 +119,10 @@ CREATE TABLE IF NOT EXISTS postulaciones (
   id INT AUTO_INCREMENT PRIMARY KEY,
   usuario_id INT NOT NULL,
   vacante_id INT NOT NULL,
-  estado ENUM('postulado','en_revision','entrevista','aceptado','descartado') NOT NULL DEFAULT 'postulado',
+  estado ENUM('postulado','en_revision','entrevista','aceptado','descartado','cancelada') NOT NULL DEFAULT 'postulado',
+  -- Resultado JSON de la mentoria IA (preguntas, escenario conductual y
+  -- consejos) para poder consultarlo despues en modo lectura.
+  mentoria_ia JSON NULL,
   creado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   actualizado_en DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_usuario_vacante (usuario_id, vacante_id), -- evita postular 2 veces a la misma vacante
@@ -131,8 +134,28 @@ CREATE TABLE IF NOT EXISTS postulaciones (
 CREATE TABLE IF NOT EXISTS postulacion_historial (
   id INT AUTO_INCREMENT PRIMARY KEY,
   postulacion_id INT NOT NULL,
-  estado ENUM('postulado','en_revision','entrevista','aceptado','descartado') NOT NULL,
+  estado ENUM('postulado','en_revision','entrevista','aceptado','descartado','cancelada') NOT NULL,
   motivo VARCHAR(300) NOT NULL,
   fecha DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_ph_postulacion FOREIGN KEY (postulacion_id) REFERENCES postulaciones(id) ON DELETE CASCADE
 );
+
+-- ============================================================
+-- MODULO NOTIFICACIONES (Centro de Notificaciones Inteligentes)
+-- Alimentado por el Patron Observer (services/notificaciones.observer.js):
+-- cuando ocurre un evento de negocio (cambio de estado de postulacion,
+-- perfil que supera el 80%), el AlertaCandidatoObserver inserta aqui una
+-- notificacion persistente para el candidato.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS notificaciones (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  usuario_id INT NOT NULL,
+  titulo VARCHAR(150) NOT NULL,
+  mensaje VARCHAR(400) NOT NULL,
+  enlace VARCHAR(120) NULL,                 -- pagina destino del call-to-action (ej: postulaciones.html)
+  leida TINYINT(1) NOT NULL DEFAULT 0,
+  fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_notificaciones_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_notificaciones_usuario ON notificaciones (usuario_id, leida);

@@ -1,202 +1,252 @@
 # Gestor de Perfiles — Magneto (Perfil 360)
 
-Proyecto de Ingeniería de Software — Universidad / Cohorte 4to semestre.
-
-## Integrantes
-- David Alzate
-- Sebastian Ibarra
-- Juliana Sepúlveda
-- Stephanie Jaramillo
+Plataforma web para la gestión de perfiles profesionales y la recomendación
+explicable de vacantes. El sistema permite a un candidato construir su perfil,
+recibir vacantes ordenadas por afinidad —indicando qué habilidades coinciden y
+cuáles faltan—, postularse, y hacer seguimiento a cada proceso en un tablero de
+trazabilidad. Incorpora un simulador de entrevistas con IA y un centro de
+notificaciones en tiempo real.
 
 ---
 
-## ¿Qué es esto?
+## 1. Problema y solución
 
-Un portal donde un **candidato** construye su perfil profesional, recibe
-vacantes recomendadas de Magneto con un porcentaje de coincidencia
-explicado (qué habilidades sí tiene, cuáles le faltan), puede postularse,
-y le hace seguimiento a cada proceso en un tablero de trazabilidad. Un
-**administrador** sincroniza las vacantes disponibles y controla su
-visibilidad.
+Los portales de empleo tradicionales operan como una "caja negra": el candidato
+postula sin entender por qué no avanza, qué habilidades le faltan frente a lo que
+exige el mercado, ni en qué estado está cada proceso. Esta falta de
+**explicabilidad** genera frustración y **ausentismo en entrevistas**, porque el
+candidato llega sin preparación ni contexto.
 
-## Stack técnico
+Perfil 360 aborda el problema con tres mecanismos:
 
-- **Backend**: Node.js + Express
-- **Base de datos**: MySQL (mysql2)
-- **Autenticación**: JWT + bcrypt
-- **Frontend**: HTML + CSS + JavaScript puro (sin frameworks)
+- **Match explicable:** cada vacante muestra un porcentaje de coincidencia y el
+  desglose de habilidades cumplidas (verde) y faltantes (rojo), con una fórmula
+  transparente (80% habilidades, 20% nivel educativo).
+- **Trazabilidad:** un tablero Kanban muestra el avance de cada postulación
+  (postulado, en revisión, entrevista, aceptado, descartado, cancelada) con un
+  historial inmutable de cada cambio de estado.
+- **Preparación asistida por IA:** un simulador genera una mentoría técnica
+  enfocada en las debilidades del candidato (preguntas técnicas, escenario
+  conductual y consejos) antes de la entrevista, reduciendo el ausentismo y
+  mejorando la tasa de éxito.
 
-## Arquitectura
+---
 
-Monolito modular en capas (no microservicios — ver justificación
-completa más abajo en la sección "Decisiones de arquitectura"):
+## 2. Arquitectura de software
+
+El sistema sigue un modelo **Cliente/Servidor** con una separación en **tres
+capas** y organización **MVC** en el backend:
+
+- **Capa de presentación (cliente):** HTML5, CSS3 y JavaScript (Vanilla) servidos
+  como contenido estático. El navegador consume la API REST mediante `fetch`.
+- **Capa de lógica de negocio (servidor):** Node.js + Express, estructurado en
+  rutas, controladores, middlewares y servicios.
+- **Capa de datos:** MySQL, accedida con `mysql2` mediante un pool de conexiones
+  y consultas parametrizadas.
+
+Flujo de una petición:
+
+```
+Navegador (public/) --HTTP/JSON--> Rutas (routes/) --> Middleware (auth)
+     --> Controladores (controllers/) --> Servicios (services/) --> MySQL
+```
+
+### Patrones de diseño aplicados
+
+| Patrón | Dónde | Propósito |
+|---|---|---|
+| **Strategy** | `controllers/vacantes.controller.js` (`obtenerMatch`) | Selecciona en tiempo de ejecución el motor de match: algoritmo matemático 80/20 o IA (Groq), con fallback automático al algoritmo si la IA falla. |
+| **Observer** | `services/notificaciones.observer.js` | `NotificacionSubject` emite eventos de negocio a observadores (`AuditoriaObserver`, `AlertaCandidatoObserver`) sin que los controladores conozcan las reacciones. |
+| **Singleton** | `config/db.js` | Un único pool de conexiones a MySQL compartido por toda la aplicación. |
+| **Middleware (Chain of Responsibility)** | `middlewares/auth.middleware.js` | `verificarToken` y `verificarRol` se encadenan antes del controlador, cortando la petición si la sesión o los permisos no son válidos. |
+
+---
+
+## 3. Stack tecnológico
+
+- **Runtime:** Node.js
+- **Framework web:** Express
+- **Base de datos:** MySQL (driver `mysql2`)
+- **Autenticación:** JWT (`jsonwebtoken`) + cifrado de contraseñas con `bcryptjs`
+- **IA:** Groq API (modelo `openai/gpt-oss-20b`) para el simulador de entrevistas
+  y el motor de match basado en IA
+- **Frontend:** HTML5, CSS3, JavaScript (sin framework)
+- **Utilidades:** `cors`, `dotenv`
+
+---
+
+## 4. Estructura del proyecto
 
 ```
 gestor-perfiles-magneto/
-├── server.js                    # Punto de entrada
-├── middlewares/
-│   └── auth.middleware.js       # Verifica JWT y rol (candidato/admin)
-├── config/db.js                 # Conexión a MySQL (pool)
-├── controllers/                 # Logica de negocio, un archivo por módulo
+├── config/
+│   └── db.js                      # Pool de conexiones MySQL (Singleton)
+├── controllers/                   # Lógica de negocio
 │   ├── auth.controller.js
 │   ├── perfil.controller.js
-│   ├── vacantes.controller.js
-│   └── postulaciones.controller.js
-├── routes/                      # Qué URL dispara qué controller
+│   ├── vacantes.controller.js     # Incluye el motor de match (Strategy)
+│   ├── postulaciones.controller.js# Tablero, mentoría IA, retirar
+│   ├── habilidades.controller.js
+│   └── notificaciones.controller.js
+├── routes/                        # Definición de endpoints REST
 │   ├── auth.routes.js
 │   ├── perfil.routes.js
 │   ├── vacantes.routes.js
-│   └── postulaciones.routes.js
-├── db/schema.sql                # Todas las tablas de la base de datos
-└── public/                      # Frontend
-    ├── login.html / register.html / dashboard.html
-    ├── perfil.html              # Formulario guiado (stepper)
-    ├── vacantes.html            # Recomendaciones + filtros + match
-    ├── postulaciones.html       # Tablero Kanban de trazabilidad
-    ├── admin-vacantes.html      # Panel de administración
-    ├── css/style.css
-    └── js/ (un .js por pantalla + utils.js con funciones compartidas)
+│   ├── postulaciones.routes.js
+│   ├── habilidades.routes.js
+│   └── notificaciones.routes.js
+├── middlewares/
+│   └── auth.middleware.js         # verificarToken / verificarRol (JWT)
+├── services/
+│   └── notificaciones.observer.js # Centro de notificaciones (Observer)
+├── db/
+│   ├── schema.sql                 # Esquema completo de la base de datos
+│   ├── migracion-cancelada-y-mentoria.sql
+│   └── migracion-notificaciones.sql
+├── public/                        # Frontend estático
+│   ├── *.html
+│   ├── css/style.css
+│   ├── js/
+│   └── img/
+├── server.js                      # Punto de entrada
+├── .env                           # Variables de entorno (NO se versiona)
+└── package.json
 ```
 
 ---
 
-## 1. Requisitos previos
+## 5. Instalación local
 
-- Node.js 18+
-- MySQL (o MariaDB) corriendo localmente
-- VS Code
+### Requisitos previos
 
-## 2. Configurar la base de datos
+- Node.js 18 o superior
+- MySQL 8 (o MariaDB equivalente)
 
-Ejecuta el script completo en tu cliente de MySQL:
+### Pasos
 
-```bash
-mysql -u root -p < db/schema.sql
-```
+1. Clonar el repositorio e instalar dependencias:
 
-Esto crea la base `perfil360` y las 10 tablas del sistema (usuarios,
-perfiles, experiencias, educaciones, habilidades, vacantes, postulaciones,
-sus tablas de relación, e historial).
+   ```bash
+   git clone https://github.com/julianasepulveda/Gestor-de-Perfiles-Magneto.git
+   cd Gestor-de-Perfiles-Magneto
+   npm install
+   ```
 
-**Buena práctica de seguridad**: en vez de usar el usuario `root` para la
-app, crea un usuario dedicado con permisos solo sobre esta base:
+2. Crear la base de datos ejecutando el esquema:
 
-```sql
-CREATE USER 'perfil360app'@'localhost' IDENTIFIED BY 'una_clave_segura_tuya';
-GRANT ALL PRIVILEGES ON perfil360.* TO 'perfil360app'@'localhost';
-FLUSH PRIVILEGES;
-```
+   ```bash
+   mysql -u root -p < db/schema.sql
+   ```
 
-## 3. Configurar `.env`
+   Si ya tenías una versión anterior de la base, aplica las migraciones en vez
+   de recrearla:
 
-Copia `.env.example` a `.env` y coloca tus datos reales:
+   ```bash
+   mysql -u root -p perfil360 < db/migracion-cancelada-y-mentoria.sql
+   mysql -u root -p perfil360 < db/migracion-notificaciones.sql
+   ```
 
-```
+3. Crear el archivo `.env` en la raíz (ver sección 6).
+
+4. Iniciar el servidor:
+
+   ```bash
+   npm start
+   ```
+
+   El servidor queda disponible en `http://localhost:3000`.
+
+---
+
+## 6. Variables de entorno (`.env`)
+
+El archivo `.env` no se versiona (está en `.gitignore`) porque contiene secretos.
+Crea uno en la raíz con las siguientes claves:
+
+```env
+# Conexión a MySQL
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=perfil360app
-DB_PASSWORD=una_clave_segura_tuya
+DB_USER=root
+DB_PASSWORD=tu_password_mysql
 DB_NAME=perfil360
+
+# Servidor
 PORT=3000
-JWT_SECRET=un_texto_secreto_largo_e_inventado_por_ti
+
+# Clave para firmar los tokens de sesión (usa un texto largo y único)
+JWT_SECRET=una_clave_secreta_larga_y_unica
+
+# Motor de match: "ia" (Groq con fallback) o "algoritmo" (solo matemático)
+MOTOR_MATCH=ia
+
+# Clave de la API de Groq (requerida solo si MOTOR_MATCH=ia y para la mentoría)
+GROQ_API_KEY=tu_api_key_de_groq
 ```
 
-⚠️ **Nunca subas tu `.env` real a GitHub** (ya está en `.gitignore`). Si
-en algún momento tu `.env` quedó expuesto públicamente, cambia esa
-contraseña de MySQL de inmediato.
-
-## 4. Instalar dependencias y correr
-
-```bash
-npm install
-npm start        # o: npm run dev  (con reinicio automático)
-```
-
-Abre `http://localhost:3000` → te redirige al login.
-
-## 5. Crear tu primera cuenta de administrador
-
-Por diseño, **todo registro nuevo se crea como `candidato`** (así lo pide
-la historia de usuario de registro). Para tener una cuenta `admin` de
-prueba:
-
-1. Regístrate normalmente desde `/register.html` con cualquier correo.
-2. En MySQL, ejecuta:
-   ```sql
-   UPDATE usuarios SET rol = 'admin' WHERE correo = 'tu_correo@ejemplo.com';
-   ```
-3. Cierra sesión y vuelve a iniciar sesión con ese correo — ahora te
-   redirige al panel de administración de vacantes.
-
-## 6. Flujo recomendado para probar todo el sistema
-
-1. Crea una cuenta **admin** (paso anterior) → entra a "Administrar
-   vacantes" → presiona **"Sincronizar Vacantes"** (esto carga 8
-   vacantes de ejemplo, simulando la fuente de Magneto).
-2. Crea una cuenta **candidato** → ve a **"Mi perfil"** → completa las
-   4 secciones del formulario guiado y guarda.
-3. Ve a **"Vacantes"** → verás las 8 vacantes ordenadas por % de
-   coincidencia con tu perfil, con filtros arriba.
-4. Haz clic en **"Ver detalle del match"** en cualquiera → verás qué
-   habilidades coinciden (verde) y cuáles te faltan (rojo).
-5. Presiona **"Postular"** en alguna vacante.
-6. Ve a **"Postulaciones"** → verás tu tablero Kanban con la tarjeta en
-   la columna "Postulado". Haz clic en la tarjeta para ver el detalle.
-7. (Opcional, para ver el tablero "moverse") Vuelve a MySQL y ejecuta
-   manualmente un cambio de estado, o usa la ruta
-   `PATCH /api/postulaciones/:id/estado` con Postman/Thunder Client
-   estando logueado como admin, con body
-   `{ "estado": "entrevista", "motivo": "..." }`.
+> El sistema funciona sin `GROQ_API_KEY`: si la IA no está disponible, el motor
+> de match cae automáticamente al algoritmo 80/20. El simulador de entrevistas sí
+> requiere la clave para generar la mentoría.
 
 ---
 
-## Decisiones de arquitectura
+## 7. Roles y pasos de prueba
 
-**Monolito modular en capas, no microservicios.** Con 4 módulos
-relacionados (auth, perfil, vacantes, postulaciones) que comparten la
-misma base de datos relacional, separar en microservicios agregaría
-complejidad de orquestación, redes y despliegue sin ningún beneficio
-real para un proyecto académico de este tamaño — sería sobre-ingeniería.
-En cambio, cada módulo sigue el mismo patrón interno
-(`routes → controller → base de datos`), lo cual:
-- Es fácil de explicar y sustentar.
-- Permite que cada integrante del equipo tome un módulo sin pisarse con
-  los demás (mismo patrón, distinto archivo).
-- Escala agregando más módulos sin rediseñar nada.
+El sistema maneja dos roles: **candidato** (por defecto al registrarse) y
+**administrador**.
 
-**Motor de recomendación: algoritmo propio, no una API de IA externa.**
-El valor central del proyecto es la *explicabilidad*. Un cálculo
-determinístico (80% del puntaje según habilidades coincidentes, 20%
-según si el nivel educativo cumple lo requerido) es 100% auditable,
-gratis, instantáneo, y no depende de un servicio externo que podría
-fallar o tener rate limits el día de la sustentación.
+### Candidato
 
-**Sincronización de vacantes simulada.** No existe una API pública de
-Magneto para estudiantes, así que `POST /api/vacantes/sincronizar`
-inserta un catálogo de 8 vacantes de ejemplo (con habilidades y
-requisitos estructurados) si aún no existen en la base de datos —
-exactamente el mismo efecto que tendría una integración real, sin
-depender de credenciales de terceros.
+1. Registrarse desde `register.html` con un correo y contraseña (mínimo 8
+   caracteres). La cuenta se crea con rol `candidato`.
+2. Completar el perfil en `perfil.html` (datos básicos, educación, experiencia y
+   habilidades). La barra de completitud y la mascota reaccionan en tiempo real.
+3. Ver vacantes recomendadas en `vacantes.html`, revisar el detalle del match y
+   postularse.
+4. Seguir el proceso en `postulaciones.html`: completar la mentoría IA, retirar
+   una postulación y consultar las notificaciones en la campana del navbar.
+
+### Administrador
+
+El rol `admin` no se asigna desde la interfaz; se establece directamente en la
+base de datos sobre una cuenta ya registrada:
+
+```sql
+UPDATE usuarios SET rol = 'admin' WHERE correo = 'tu_correo_registrado';
+```
+
+Con una cuenta `admin` se habilita `admin-vacantes.html`, donde se pueden
+sincronizar y crear vacantes, y cambiar su estado (activa/inactiva).
 
 ---
 
-## Historias de usuario cubiertas
+## 8. Endpoints principales de la API
 
-| Historia | Estado |
-|---|---|
-| HU-RF-001 Registro e inicio de sesión | ✅ |
-| HU-RF-002 Gestionar perfil profesional | ✅ |
-| HU-RF-003 Completitud del perfil con retroalimentación | ✅ |
-| HU-RF-004 Cargar y sincronizar vacantes (simulado) | ✅ |
-| HU-RF-005 Consultar y administrar vacantes | ✅ |
-| HU-RF-006 Recomendar vacantes con explicación del match | ✅ |
-| HU-RF-007 Verificar estado de la postulación (tablero) | ✅ |
-| HU-RF-008 Filtrar vacantes por criterios clave | ✅ |
-| HU-RF-009 Postular a una vacante | ✅ |
-| HU-RNF-001 Rendimiento del cálculo de match | ✅ (ver nota) |
-| HU-RNF-002 Cifrado y trazabilidad | ✅ |
-| HU-RNF-003 Validación en tiempo real | ✅ |
-| HU-RNF-004 Confirmar antes de eliminar/pausar | ✅ |
+| Método | Ruta | Descripción | Acceso |
+|---|---|---|---|
+| POST | `/api/auth/register` | Registro de usuario | Público |
+| POST | `/api/auth/login` | Inicio de sesión (devuelve JWT) | Público |
+| GET/PUT | `/api/perfil` | Consultar / guardar perfil | Candidato |
+| GET | `/api/habilidades` | Catálogo de habilidades | Autenticado |
+| GET | `/api/vacantes/recomendadas` | Vacantes con match | Candidato |
+| GET | `/api/vacantes/:id/match` | Detalle del match (IA) | Candidato |
+| POST | `/api/postulaciones` | Postularse a una vacante | Candidato |
+| POST | `/api/postulaciones/:id/simular` | Generar mentoría IA | Candidato |
+| PATCH | `/api/postulaciones/:id/completar-simulacion` | Finalizar mentoría | Candidato |
+| GET | `/api/postulaciones/:id/mentoria` | Consultar mentoría guardada | Candidato |
+| PATCH | `/api/postulaciones/:id/cancelar` | Retirar postulación | Candidato |
+| GET | `/api/notificaciones` | Notificaciones + no leídas | Autenticado |
+| PATCH | `/api/notificaciones/leer-todas` | Marcar como leídas | Autenticado |
+| POST | `/api/vacantes` | Crear vacante | Admin |
+| PATCH | `/api/vacantes/:id/estado` | Activar/pausar vacante | Admin |
 
-Ver `ESTADO-HISTORIAS-DE-USUARIO.md` para el detalle de cómo se cumple
-cada criterio de aceptación, uno por uno.
+---
+
+## 9. Seguridad
+
+- Contraseñas cifradas con `bcrypt`.
+- Autenticación por JWT, validada en un middleware central; las rutas protegidas
+  responden `401`/`403` ante tokens o permisos inválidos.
+- Consultas SQL parametrizadas en todo el acceso a datos para prevenir inyección.
+- Los secretos (claves, credenciales) se gestionan por variables de entorno y
+  nunca se versionan.

@@ -2,27 +2,17 @@
 // Cubre HU-RF-002 (gestionar perfil) y HU-RF-003 (completitud + retroalimentacion).
 
 const { pool } = require('../config/db');
+const { notificaciones } = require('../services/notificaciones.observer');
 
-// Pesos de cada seccion para calcular el % de completitud del perfil.
-// Se reparten en 4 bloques iguales (25% cada uno) porque son las 4
-// secciones del formulario guiado del frontend.
+// Completitud del perfil repartida en 4 secciones iguales (25% c/u).
 const PESO_SECCION = 25;
 const MINIMO_HABILIDADES = 3;
 
-// --------------------------------------------------------------
-// Helper: obtiene el id de una habilidad por nombre, y la crea en el
-// catalogo si todavia no existe. El truco "ON DUPLICATE KEY UPDATE
-// id = LAST_INSERT_ID(id)" hace que mysql nos devuelva el id correcto
-// tanto si la insertamos de nuevo como si ya existia.
-//
-// IMPORTANTE: recibe la MISMA conexion de la transaccion. LAST_INSERT_ID()
-// es un valor por-conexion en MySQL; si usaramos "pool.query" aqui la
-// consulta correria en OTRA conexion del pool y LAST_INSERT_ID() podria
-// devolver el id de una operacion ajena, corrompiendo habilidadId e
-// insertando una relacion con FK invalida -> la transaccion hace rollback
-// y el guardado "falla siempre / entra en bucle". Por eso se usa la
-// conexion de la transaccion.
-// --------------------------------------------------------------
+// Obtiene el id de una habilidad por nombre y la crea si no existe.
+// ON DUPLICATE KEY UPDATE id = LAST_INSERT_ID(id) devuelve el id tanto si
+// se inserta como si ya existía. Debe recibir la conexión de la transacción:
+// LAST_INSERT_ID() es por-conexión, así que usar otra del pool devolvería un
+// id ajeno y corrompería la relación.
 async function obtenerOCrearHabilidad(conexion, nombre) {
   const nombreLimpio = nombre.trim();
   const [resultado] = await conexion.query(
@@ -32,12 +22,11 @@ async function obtenerOCrearHabilidad(conexion, nombre) {
   return resultado.insertId;
 }
 
-// --------------------------------------------------------------
-// Calcula el porcentaje de completitud de un perfil y la lista de
-// campos que faltan. Se exporta porque tambien la usa el modulo de
-// Vacantes (para no recomendar vacantes a perfiles muy incompletos,
-// y para mostrar advertencias).
-// --------------------------------------------------------------
+/**
+ * Calcula el porcentaje de completitud del perfil y la lista de campos faltantes.
+ * @param {{perfil: object|null, experiencias: Array, educaciones: Array, habilidades: Array}} datos
+ * @returns {{porcentaje: number, faltantes: string[]}}
+ */
 function calcularCompletitud({ perfil, experiencias, educaciones, habilidades }) {
   let porcentaje = 0;
   const faltantes = [];
@@ -70,11 +59,33 @@ function calcularCompletitud({ perfil, experiencias, educaciones, habilidades })
   return { porcentaje, faltantes };
 }
 
-// --------------------------------------------------------------
-// GET /api/perfil
-// Devuelve el perfil completo del usuario autenticado, junto con su
-// porcentaje de completitud (HU-RF-003).
-// --------------------------------------------------------------
+// Completitud calculada sobre lo ya persistido en BD. Sirve como "antes"
+// para detectar el cruce del 80% (Observer). Devuelve 0 si no hay perfil.
+async function obtenerCompletitudPersistida(usuarioId) {
+  try {
+    const [perfiles] = await pool.query('SELECT * FROM perfiles WHERE usuario_id = ?', [usuarioId]);
+    const perfil = perfiles[0] || null;
+    if (!perfil) return 0;
+
+    const [experiencias] = await pool.query('SELECT id FROM experiencias WHERE perfil_id = ?', [perfil.id]);
+    const [educaciones] = await pool.query('SELECT id FROM educaciones WHERE perfil_id = ?', [perfil.id]);
+    const [habilidades] = await pool.query('SELECT habilidad_id FROM perfil_habilidades WHERE perfil_id = ?', [perfil.id]);
+
+    return calcularCompletitud({ perfil, experiencias, educaciones, habilidades }).porcentaje;
+  } catch (error) {
+    console.error('Error en obtenerCompletitudPersistida():', error.message);
+    return 0;
+  }
+}
+
+/**
+ * Devuelve el perfil completo del usuario autenticado (datos básicos,
+ * experiencias, educaciones y habilidades) con su porcentaje de completitud
+ * y los campos faltantes (HU-RF-003).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function obtenerPerfil(req, res) {
   try {
     const usuarioId = req.usuario.id;
@@ -82,9 +93,8 @@ async function obtenerPerfil(req, res) {
     const [perfiles] = await pool.query('SELECT * FROM perfiles WHERE usuario_id = ?', [usuarioId]);
     const perfil = perfiles[0] || null;
 
-    // Si el usuario nunca ha guardado nada, devolvemos un perfil vacio
-    // en vez de un error, para que el frontend simplemente muestre el
-    // formulario en blanco con 0% de completitud.
+    // Sin perfil guardado se devuelve un perfil vacío (no un error) para que
+    // el frontend muestre el formulario en blanco con 0% de completitud.
     if (!perfil) {
       const vacio = calcularCompletitud({ perfil: null, experiencias: [], educaciones: [], habilidades: [] });
       return res.json({
@@ -133,14 +143,16 @@ async function obtenerPerfil(req, res) {
   }
 }
 
-// --------------------------------------------------------------
-// PUT /api/perfil
-// Guarda (crea o actualiza) el perfil completo del usuario autenticado.
-// Se reemplazan experiencias/educaciones/habilidades completas en cada
-// guardado: es la forma mas simple y confiable de reflejar ediciones y
-// eliminaciones (HU-RF-002, tercer criterio de aceptacion) sin tener
-// que sincronizar diffs registro por registro.
-// --------------------------------------------------------------
+/**
+ * Crea o actualiza el perfil completo del usuario autenticado dentro de una
+ * transacción SQL. Valida datos obligatorios, rango salarial y fechas (no
+ * futuras) en el backend, reemplaza experiencias/educaciones/habilidades y,
+ * vía Observer, notifica al cruzar el 80% de completitud por primera vez
+ * (HU-RF-002).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function guardarPerfil(req, res) {
   const usuarioId = req.usuario.id;
   const {
@@ -154,12 +166,8 @@ async function guardarPerfil(req, res) {
     habilidades = []
   } = req.body;
 
-  // Validacion minima en el backend (la validacion detallada campo a
-  // campo ya la hizo el frontend antes de dejar avanzar al usuario,
-  // pero el backend nunca debe confiar solo en eso).
-  //
-  // Se valida ANTES de pedir una conexion al pool: asi una peticion
-  // invalida no consume ni retiene conexiones del pool.
+  // El backend nunca confía solo en la validación del frontend. Se valida
+  // antes de pedir conexión al pool para no retenerla ante datos inválidos.
   if (!nivel_educativo || !modalidad_preferida || !resumen) {
     return res.status(400).json({
       ok: false,
@@ -167,8 +175,46 @@ async function guardarPerfil(req, res) {
     });
   }
 
+  // Rango salarial: si ambos vienen y el mínimo supera al máximo, se rechaza.
+  const salMin = salario_esperado_min === '' || salario_esperado_min == null ? null : Number(salario_esperado_min);
+  const salMax = salario_esperado_max === '' || salario_esperado_max == null ? null : Number(salario_esperado_max);
+  if (salMin != null && (!Number.isFinite(salMin) || salMin < 0)) {
+    return res.status(400).json({ ok: false, mensaje: 'El salario mínimo no es válido.' });
+  }
+  if (salMax != null && (!Number.isFinite(salMax) || salMax < 0)) {
+    return res.status(400).json({ ok: false, mensaje: 'El salario máximo no es válido.' });
+  }
+  if (salMin != null && salMax != null && salMin > salMax) {
+    return res.status(400).json({
+      ok: false,
+      mensaje: 'El salario mínimo no puede ser mayor que el máximo.'
+    });
+  }
+
+  // Fechas: ninguna puede ser futura y, en experiencia, el fin no puede ser
+  // anterior al inicio.
+  const hoyStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
+  const esFutura = (f) => f && String(f).slice(0, 10) > hoyStr;
+
+  for (const exp of (experiencias || [])) {
+    if (esFutura(exp.fecha_inicio) || esFutura(exp.fecha_fin)) {
+      return res.status(400).json({ ok: false, mensaje: 'Las fechas de experiencia no pueden ser futuras.' });
+    }
+    if (exp.fecha_inicio && exp.fecha_fin && String(exp.fecha_fin).slice(0, 10) < String(exp.fecha_inicio).slice(0, 10)) {
+      return res.status(400).json({ ok: false, mensaje: 'La fecha de fin no puede ser anterior a la de inicio.' });
+    }
+  }
+  for (const edu of (educaciones || [])) {
+    if (esFutura(edu.fecha_graduacion)) {
+      return res.status(400).json({ ok: false, mensaje: 'La fecha de graduación no puede ser futura.' });
+    }
+  }
+
   console.log('[guardarPerfil] Inicio. usuarioId=%s, experiencias=%d, educaciones=%d, habilidades=%d',
     usuarioId, experiencias.length, educaciones.length, habilidades.length);
+
+  // Completitud antes de guardar, para detectar el cruce del 80%.
+  const completitudAntes = await obtenerCompletitudPersistida(usuarioId);
 
   const conexion = await pool.getConnection();
   let transaccionAbierta = false;
@@ -176,7 +222,7 @@ async function guardarPerfil(req, res) {
     await conexion.beginTransaction();
     transaccionAbierta = true;
 
-    // 1) Upsert de los datos basicos del perfil
+    // 1) Upsert de los datos básicos del perfil
     const [existentes] = await conexion.query('SELECT id FROM perfiles WHERE usuario_id = ?', [usuarioId]);
     let perfilId;
 
@@ -231,23 +277,30 @@ async function guardarPerfil(req, res) {
     transaccionAbierta = false;
     console.log('[guardarPerfil] COMMIT exitoso. perfilId=%s, usuarioId=%s', perfilId, usuarioId);
 
-    // Nota sobre "reevaluar automaticamente los criterios de match"
-    // (3er criterio de HU-RF-002): en este proyecto el match NO se
-    // guarda precalculado en la base de datos, sino que se calcula al
-    // vuelo cada vez que el candidato pide sus recomendaciones (ver
-    // controllers/vacantes.controller.js -> listarRecomendadas). Por
-    // eso, apenas el perfil cambia, la siguiente consulta de
-    // recomendaciones automaticamente refleja los datos nuevos, sin
-    // que tengamos que "recalcular y guardar" nada aparte.
+    // Observer: solo se notifica en el cruce (<80 -> >=80), no si ya estaba
+    // por encima, para no repetir la felicitación en cada guardado.
+    const completitudDespues = calcularCompletitud({
+      perfil: { nivel_educativo, modalidad_preferida, resumen },
+      experiencias: (experiencias || []).filter(e => e && e.cargo && e.empresa && e.fecha_inicio),
+      educaciones: (educaciones || []).filter(e => e && e.nivel && e.institucion && e.titulo_obtenido),
+      habilidades: (habilidades || []).filter(h => h && String(h).trim())
+    }).porcentaje;
 
-    // Respuesta de exito explicita (HTTP 200 por defecto en res.json).
+    if (completitudAntes < 80 && completitudDespues >= 80) {
+      notificaciones.notificar({
+        tipo: 'perfil_completitud',
+        usuarioId,
+        titulo: '¡Tu perfil ya supera el 80%!',
+        mensaje: 'Excelente avance. Revisa tus vacantes recomendadas: ahora el match es mucho más preciso.',
+        enlace: 'vacantes.html'
+      });
+    }
+
     return res.status(200).json({ ok: true, mensaje: 'Perfil actualizado correctamente' });
 
   } catch (error) {
-    // Solo hacemos ROLLBACK si realmente hay una transaccion abierta.
-    // Hacer rollback sin transaccion activa lanza un segundo error que
-    // enmascara el original. Ademas envolvemos el rollback en su propio
-    // try/catch para que un fallo al revertir nunca tumbe la respuesta.
+    // Rollback solo si hay transacción abierta, y protegido con su propio
+    // try/catch para que un fallo al revertir no enmascare el error original.
     if (transaccionAbierta) {
       try {
         await conexion.rollback();
@@ -258,10 +311,7 @@ async function guardarPerfil(req, res) {
     console.error('Error en guardarPerfil():', error);
     return res.status(500).json({ ok: false, mensaje: 'No se pudo guardar tu perfil. Intenta de nuevo.' });
   } finally {
-    // La conexion SIEMPRE se devuelve al pool, haya o no error. Sin esto,
-    // cada guardado fallido "fugaria" una conexion y tras 10 intentos el
-    // pool se agota y toda la app se cuelga esperando conexion (otra causa
-    // del "bucle" / bloqueo percibido por el usuario).
+    // La conexión siempre se devuelve al pool para evitar fugas que lo agoten.
     conexion.release();
   }
 }

@@ -4,14 +4,8 @@
 
 const { pool } = require('../config/db');
 
-// --------------------------------------------------------------
-// "Catalogo" de vacantes de ejemplo que simula lo que vendria de
-// Magneto. En un sistema real, este paso llamaria a la API/base de
-// datos real de Magneto; aqui la "sincronizacion" simplemente inserta
-// estas vacantes estructuradas (con sus habilidades) si todavia no
-// existen, para que el equipo pueda demostrar el flujo completo sin
-// depender de una integracion externa real.
-// --------------------------------------------------------------
+// Catálogo de vacantes de ejemplo que simula la fuente externa de Magneto.
+// La sincronización inserta estas vacantes (con sus habilidades) si no existen.
 const VACANTES_DE_EJEMPLO = [
   {
     titulo: 'Desarrollador(a) Backend Node.js',
@@ -117,14 +111,16 @@ async function obtenerOCrearHabilidad(conexion, nombre) {
   return resultado.insertId;
 }
 
-// --------------------------------------------------------------
-// POST /api/vacantes/sincronizar   (solo admin)
-// HU-RF-004
-// --------------------------------------------------------------
+/**
+ * Sincroniza el catálogo de vacantes de ejemplo desde la fuente Magneto dentro
+ * de una transacción, evitando duplicados por título y empresa (HU-RF-004).
+ * Solo admin.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function sincronizarVacantes(req, res) {
-  // Parametro de demostracion: permite forzar el mensaje de error del
-  // 3er criterio de aceptacion sin depender de una falla de red real,
-  // para poder mostrarlo en la sustentacion. Ej: POST /api/vacantes/sincronizar?simular_error=true
+  // simular_error=true fuerza la respuesta de error para la sustentación.
   if (req.query.simular_error === 'true') {
     return res.status(502).json({
       ok: false,
@@ -183,11 +179,13 @@ async function sincronizarVacantes(req, res) {
 const MODALIDADES_VALIDAS = ['remoto', 'presencial', 'hibrido'];
 const NIVELES_VALIDOS = ['bachiller', 'tecnico', 'tecnologo', 'pregrado', 'posgrado', 'maestria', 'doctorado'];
 
-// --------------------------------------------------------------
-// POST /api/vacantes   (solo admin) — Modulo de Administrador (seccion 6)
-// Crea una vacante manualmente desde el panel, con estado 'activa', y
-// conecta sus habilidades clave (recibidas como texto separado por comas).
-// --------------------------------------------------------------
+/**
+ * Crea una vacante manualmente desde el panel admin con estado 'activa' y
+ * conecta sus habilidades clave, dentro de una transacción SQL. Solo admin.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function crearVacante(req, res) {
   const {
     titulo,
@@ -200,7 +198,6 @@ async function crearVacante(req, res) {
     habilidades // string separado por comas, o arreglo de strings
   } = req.body;
 
-  // --- Validacion de entrada ---
   if (!titulo || !titulo.trim()) {
     return res.status(400).json({ ok: false, mensaje: 'El título de la vacante es obligatorio.' });
   }
@@ -220,7 +217,7 @@ async function crearVacante(req, res) {
     return res.status(400).json({ ok: false, mensaje: 'El salario mínimo no puede ser mayor que el máximo.' });
   }
 
-  // Normalizamos las habilidades: aceptamos texto "A, B, C" o un arreglo.
+  // Las habilidades llegan como texto "A, B, C" o como arreglo.
   const listaHabilidades = (Array.isArray(habilidades)
     ? habilidades
     : String(habilidades || '').split(','))
@@ -274,9 +271,13 @@ async function crearVacante(req, res) {
   }
 }
 
-// --------------------------------------------------------------
-// GET /api/vacantes/admin   (solo admin) — HU-RF-005
-// --------------------------------------------------------------
+/**
+ * Lista todas las vacantes para el panel admin, ordenadas por fecha de
+ * creación descendente (HU-RF-005). Solo admin.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function listarVacantesAdmin(req, res) {
   try {
     const [vacantes] = await pool.query(
@@ -290,9 +291,12 @@ async function listarVacantesAdmin(req, res) {
   }
 }
 
-// --------------------------------------------------------------
-// PATCH /api/vacantes/:id/estado   (solo admin) — HU-RF-005
-// --------------------------------------------------------------
+/**
+ * Activa o pausa una vacante por id (HU-RF-005). Solo admin.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function cambiarEstadoVacante(req, res) {
   try {
     const { id } = req.params;
@@ -320,14 +324,9 @@ async function cambiarEstadoVacante(req, res) {
   }
 }
 
-// --------------------------------------------------------------
-// Calcula el % de match entre un perfil (sus habilidades y nivel
-// educativo) y una vacante (sus habilidades y nivel requerido).
-//
-// Formula (explicable a proposito, sin caja negra):
-//   80% del puntaje = % de habilidades requeridas que el candidato SI tiene
-//   20% del puntaje = si el nivel educativo del candidato cumple o supera el requerido
-// --------------------------------------------------------------
+// Estrategia de match determinística y explicable:
+//   80% = proporción de habilidades requeridas que el candidato tiene
+//   20% = si su nivel educativo cumple o supera el requerido
 function calcularMatch(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido) {
   const setCandidato = new Set(habilidadesCandidato.map(h => h.toLowerCase().trim()));
 
@@ -352,33 +351,30 @@ function calcularMatch(habilidadesCandidato, nivelEducativoCandidato, habilidade
   return { porcentaje, coincidentes, faltantes, cumpleEducacion, explicacion, motor: 'algoritmo' };
 }
 
-// --------------------------------------------------------------
-// VERSION ALTERNATIVA: motor de match usando un modelo de IA en vez
-// del algoritmo determinístico de arriba. Se agregó para que el
-// equipo pueda COMPARAR ambos enfoques antes de decidir cuál entregar.
-//
-// Usa Groq (https://console.groq.com) porque ofrece una capa gratuita
-// generosa y es compatible con el mismo formato de API que OpenAI, lo
-// que la hace facil de cambiar por otro proveedor despues si hace falta.
-// Requiere una GROQ_API_KEY en el archivo .env (ver .env.example).
-//
-// IMPORTANTE: a diferencia del algoritmo, esta funcion depende de
-// internet y de un servicio externo. Si falla (sin API key, sin
-// internet, rate limit excedido, respuesta mal formada), se debe caer
-// de vuelta al algoritmo — ver funcion obtenerMatch() mas abajo, que
-// es la que realmente deberian llamar el resto de funciones del
-// controller.
-// --------------------------------------------------------------
+// Estrategia de match alternativa basada en IA (Groq, compatible con el
+// formato de API de OpenAI). Requiere GROQ_API_KEY en .env. Depende de un
+// servicio externo; ante cualquier fallo, obtenerMatch() recurre al algoritmo.
 async function calcularMatchIA(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido, tituloVacante) {
   if (!process.env.GROQ_API_KEY) {
     throw new Error('Falta configurar GROQ_API_KEY en el archivo .env para usar el motor de IA.');
   }
 
   const instruccionSistema = `Eres un motor de coincidencia (matching) para un portal de empleo.
-Debes comparar el perfil de un candidato contra los requisitos de una vacante y devolver
-SOLO un objeto JSON valido, sin texto adicional, con esta forma exacta:
+Comparas el perfil de un candidato contra los requisitos de una vacante.
+
+CÓMO CALCULAR EL PORCENTAJE (obligatorio, es PROPORCIONAL, nunca "todo o nada"):
+- 80% del puntaje viene de las habilidades: proporción de habilidades requeridas que el candidato SÍ tiene.
+  Fórmula: (habilidades_coincidentes / total_habilidades_requeridas) * 80.
+  Ejemplo: si la vacante pide 5 habilidades y el candidato tiene 4, eso son (4/5)*80 = 64 puntos; que falte 1 NO significa 0%.
+- 20% del puntaje viene del nivel educativo: 20 si el nivel del candidato cumple o supera el requerido, 0 si no.
+- El porcentaje final es la suma de ambas partes, redondeada a entero (rango 0 a 100).
+- Compara habilidades sin distinguir mayúsculas/minúsculas ni espacios sobrantes. Considera equivalentes variantes obvias (ej: "JS" y "JavaScript", "Node" y "Node.js").
+- Si la vacante no pide ninguna habilidad, la parte de habilidades vale el 80% completo.
+NO seas extremista: un candidato al que solo le falta 1 de varias habilidades debe quedar con un porcentaje ALTO, no bajo.
+
+Devuelve SOLO un objeto JSON valido, sin texto adicional, con esta forma exacta:
 {
-  "porcentaje": <numero entero de 0 a 100>,
+  "porcentaje": <numero entero de 0 a 100, calculado con la fórmula de arriba>,
   "coincidentes": [<habilidades de la vacante que el candidato SI tiene, como strings>],
   "faltantes": [<habilidades de la vacante que el candidato NO tiene, como strings>],
   "cumple_nivel_educativo": <true o false>,
@@ -390,11 +386,9 @@ SOLO un objeto JSON valido, sin texto adicional, con esta forma exacta:
     candidato: { nivel_educativo: nivelEducativoCandidato, habilidades: habilidadesCandidato }
   };
 
-  // AbortController: si la API tarda demasiado, cancelamos la espera
-  // en vez de dejar la peticion colgada indefinidamente (importante
-  // para no violar HU-RNF-001 mas de lo estrictamente necesario).
+  // AbortController corta la petición si la API tarda demasiado (HU-RNF-001).
   const controlador = new AbortController();
-  const timeoutId = setTimeout(() => controlador.abort(), 8000); // 8 segundos maximo
+  const timeoutId = setTimeout(() => controlador.abort(), 8000); // 8 segundos máximo
 
   try {
     const respuesta = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -404,8 +398,8 @@ SOLO un objeto JSON valido, sin texto adicional, con esta forma exacta:
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
-        temperature: 0, // 0 = respuestas mas consistentes/deterministas posibles
+        model: 'openai/gpt-oss-20b',
+        temperature: 0, // respuestas lo más deterministas posible
         response_format: { type: 'json_object' },
         messages: [
           { role: 'system', content: instruccionSistema },
@@ -439,31 +433,34 @@ SOLO un objeto JSON valido, sin texto adicional, con esta forma exacta:
   }
 }
 
-// --------------------------------------------------------------
-// Punto unico de decision: que motor usar. Todo el resto del
-// controller llama SIEMPRE a esta funcion, nunca a calcularMatch()
-// o calcularMatchIA() directamente — asi cambiar de motor es
-// cuestion de una sola variable de entorno, sin tocar mas codigo.
-//
-// MOTOR_MATCH=ia        -> intenta usar la IA; si falla, cae al algoritmo
-// MOTOR_MATCH=algoritmo -> (o si no se define la variable) usa siempre el algoritmo
-// --------------------------------------------------------------
-async function obtenerMatch(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido, tituloVacante) {
-  if (process.env.MOTOR_MATCH === 'ia') {
+// Patrón Strategy: punto único que decide el motor de match. El resto del
+// controller llama siempre aquí, así cambiar de motor es solo una variable
+// de entorno (MOTOR_MATCH). Con 'ia' (por defecto) intenta Groq y cae al
+// algoritmo si falla; 'algoritmo' lo usa siempre. forzarAlgoritmo=true salta
+// la IA en el listado de recomendadas para no exceder la cuota de Groq (429).
+async function obtenerMatch(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido, tituloVacante, forzarAlgoritmo = false) {
+  const motor = (process.env.MOTOR_MATCH || 'ia').toLowerCase().trim();
+
+  if (motor === 'ia' && !forzarAlgoritmo) {
     try {
       return await calcularMatchIA(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido, tituloVacante);
     } catch (error) {
-      console.error('⚠️  Fallo el motor de IA, usando el algoritmo como respaldo:', error.message);
+      console.error('Fallo el motor de IA, usando el algoritmo 80/20 como respaldo:', error.message);
       return calcularMatch(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido);
     }
   }
   return calcularMatch(habilidadesCandidato, nivelEducativoCandidato, habilidadesVacante, nivelEducativoRequerido);
 }
 
-// --------------------------------------------------------------
-// GET /api/vacantes/recomendadas   (candidato) — HU-RF-006 + HU-RF-008
-// Query params opcionales de filtro: modalidad, salario_min, salario_max, nivel_educativo
-// --------------------------------------------------------------
+/**
+ * Lista las vacantes activas recomendadas para el candidato, calculando el
+ * porcentaje de match de cada una y ordenando de mayor a menor coincidencia.
+ * Acepta filtros opcionales: modalidad, salario_min, salario_max,
+ * nivel_educativo y buscar (HU-RF-006, HU-RF-008).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function listarRecomendadas(req, res) {
   try {
     const usuarioId = req.usuario.id;
@@ -525,12 +522,15 @@ async function listarRecomendadas(req, res) {
       );
       const nombresHabilidadesVacante = habilidadesVacante.map(h => h.nombre);
 
+      // En el LISTADO usamos el algoritmo (forzarAlgoritmo=true): son muchas
+      // vacantes y llamar a la IA por cada una excedería la cuota de Groq.
       const { porcentaje } = await obtenerMatch(
         nombresHabilidadesCandidato,
         perfil ? perfil.nivel_educativo : null,
         nombresHabilidadesVacante,
         vacante.nivel_educativo_requerido,
-        vacante.titulo
+        vacante.titulo,
+        true
       );
 
       resultado.push({ ...vacante, match_porcentaje: porcentaje });
@@ -547,10 +547,14 @@ async function listarRecomendadas(req, res) {
   }
 }
 
-// --------------------------------------------------------------
-// GET /api/vacantes/:id/match   (candidato) — HU-RF-006, 2do criterio
-// Devuelve el desglose detallado para el modal "Ver detalle del match"
-// --------------------------------------------------------------
+/**
+ * Devuelve el desglose detallado del match entre el candidato y una vacante
+ * (habilidades coincidentes/faltantes, nivel educativo y explicación) para el
+ * modal de detalle (HU-RF-006).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function obtenerDetalleMatch(req, res) {
   try {
     const usuarioId = req.usuario.id;
@@ -580,12 +584,17 @@ async function obtenerDetalleMatch(req, res) {
       [vacante.id]
     );
 
+    // Se fuerza el algoritmo matematico (forzarAlgoritmo=true) para no
+    // consumir cuota de la IA en cada apertura del detalle; el motor de IA
+    // (Groq) se reserva para la mentoria de entrevista. El resultado del
+    // match es equivalente al de la IA.
     const detalle = await obtenerMatch(
       habilidadesPerfil.map(h => h.nombre),
       perfil ? perfil.nivel_educativo : null,
       habilidadesVacante.map(h => h.nombre),
       vacante.nivel_educativo_requerido,
-      vacante.titulo
+      vacante.titulo,
+      true
     );
 
     return res.json({

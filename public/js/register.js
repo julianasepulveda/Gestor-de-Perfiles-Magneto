@@ -1,7 +1,7 @@
 // Logica de la pantalla de registro.
 // Se conecta con el backend en POST /api/auth/register
 
-const API_BASE = ''; // mismo origen (el backend sirve este HTML)
+const API_BASE = '';
 
 const form = document.getElementById('form-registro');
 const inputCorreo = document.getElementById('correo');
@@ -17,7 +17,6 @@ const btnIrLogin = document.getElementById('btn-ir-login');
 
 const MIN_PASSWORD_LENGTH = 8;
 
-// --- Mostrar / ocultar contraseña ---
 document.getElementById('toggle-pass').addEventListener('click', () => {
   const esPassword = inputPassword.type === 'password';
   inputPassword.type = esPassword ? 'text' : 'password';
@@ -86,13 +85,11 @@ form.addEventListener('submit', async (evento) => {
     const datos = await respuesta.json();
 
     if (!respuesta.ok) {
-      // Caso: correo ya registrado, u otra validacion del backend
       alertaError.textContent = datos.mensaje || 'No se pudo completar el registro.';
       alertaError.classList.add('visible');
       return;
     }
 
-    // Registro exitoso -> mostrar modal de confirmacion
     modalExito.classList.add('visible');
     form.reset();
 

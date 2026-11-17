@@ -51,25 +51,17 @@ form.addEventListener('submit', async (evento) => {
     const datos = await respuesta.json().catch(() => ({}));
 
     if (!respuesta.ok) {
-      // El formulario se queda en la misma pantalla (no navegamos a otro lado)
       mostrarAlerta(datos.mensaje || 'Credenciales inválidas. Verifica tu correo y contraseña');
       return;
     }
 
-    // Blindaje: solo consideramos el login exitoso si el backend realmente
-    // devolvio un token y el usuario. Sin esta comprobacion, si "datos.token"
-    // viniera vacio o undefined, localStorage guardaria la cadena "undefined",
-    // protegerPagina() la aceptaria como valida y la app mandaria el header
-    // "Bearer undefined" -> el backend responde 401 -> apiFetch borra la
-    // sesion y vuelve al login en bucle (el "bloqueo de acceso" reportado).
+    // Solo es login exitoso si vienen token y usuario: guardar un token
+    // "undefined" provocaría un 401 en cada petición y un bucle al login.
     if (!datos.token || !datos.usuario) {
       mostrarAlerta('No se pudo iniciar sesión. Intenta de nuevo.');
       return;
     }
 
-    // Login exitoso: guardamos el token y el usuario, y redirigimos.
-    // Se limpia la bandera del confeti para que la celebracion de "perfil
-    // 100%" pueda volver a dispararse para la cuenta que inicia sesion.
     localStorage.setItem('perfil360_token', datos.token);
     localStorage.setItem('perfil360_usuario', JSON.stringify(datos.usuario));
 

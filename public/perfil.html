@@ -30,8 +30,17 @@
     <!-- Columna lateral: mascota gamificada + progreso en vivo -->
     <aside class="perfil-aside">
       <div class="perfil-aside__mascota">
-        <img src="img/logo-perfil3601.png" alt="Perfil 360" id="mascota-perfil" class="mascota-img" />
+        <!-- Mascota emotiva: su 'src' y su clase .emocion-* cambian en vivo
+             segun el porcentaje de completitud (ver actualizarEstadoMascota
+             en perfil.js). Arranca en estado triste (0%). -->
+        <img src="img/mascota-triste.png" alt="Mascota de progreso del perfil" id="mascota-perfil"
+          class="mascota-img emocion-triste" />
       </div>
+
+      <!-- Mensaje corto de la mascota segun el porcentaje -->
+      <div class="mascota-mensaje" id="mascota-mensaje"></div>
+
+      <!-- Globo original ligado al PASO del formulario (se conserva) -->
       <div class="perfil-aside__globo" id="mascota-globo-perfil"></div>
 
       <div class="perfil-aside__progreso">
@@ -106,6 +115,8 @@
               <div class="campo">
                 <label for="salario_esperado_max">Salario esperado — máximo (COP)</label>
                 <input type="number" id="salario_esperado_max" placeholder="Ej: 4000000" min="0" />
+                <div class="campo__error-msg" id="error-salario">El salario mínimo no puede ser mayor que el máximo.
+                </div>
               </div>
             </div>
           </div>
@@ -127,17 +138,35 @@
           <div class="paso-formulario" data-paso="4">
             <div class="campo">
               <label for="input-habilidad">Habilidades</label>
-              <input type="text" id="input-habilidad"
+              <input type="text" id="input-habilidad" list="opciones-habilidades"
                 placeholder="Escribe una habilidad y presiona Enter (ej: Node.js)" />
+              <datalist id="opciones-habilidades"></datalist>
               <div class="campo__ayuda">Agrega al menos 3 habilidades para mejorar tus recomendaciones.</div>
+
+              <!-- Habilidades seleccionadas (chips verdes con 'x') -->
               <div class="chips-contenedor" id="chips-habilidades"></div>
+
+              <!-- Catálogo de habilidades disponibles como ovalitos azules
+                   clicables. Al hacer clic se agregan arriba como chip. -->
+              <p class="catalogo-habilidades__titulo" id="catalogo-habilidades-titulo" style="display:none;">
+                O elige de la lista de habilidades:
+              </p>
+              <div class="catalogo-habilidades" id="catalogo-habilidades"></div>
             </div>
           </div>
 
           <div class="stepper-botones">
-            <button type="button" class="btn-secundario" id="btn-anterior" style="visibility:hidden;">←
+            <button type="button" class="btn-secundario" id="btn-anterior" style="visibility:hidden;"><svg class="icono"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <path d="m15 18-6-6 6-6" />
+              </svg>
               Anterior</button>
-            <button type="button" class="btn-primario" id="btn-siguiente" style="width:auto;">Siguiente →</button>
+            <button type="button" class="btn-primario" id="btn-siguiente" style="width:auto;">Siguiente <svg
+                class="icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m9 18 6-6-6-6" />
+              </svg></button>
             <button type="submit" class="btn-primario" id="btn-guardar" style="width:auto; display:none;">
               <span class="spinner" id="spinner-guardar"></span>
               <span id="texto-btn-guardar">Guardar Perfil</span>
@@ -152,7 +181,10 @@
   <!-- Plantillas ocultas usadas por perfil.js para clonar filas repetibles -->
   <template id="plantilla-educacion">
     <div class="repetible-item" data-fila-educacion>
-      <button type="button" class="repetible-item__quitar" data-accion="quitar">✕ Quitar</button>
+      <button type="button" class="repetible-item__quitar" data-accion="quitar"><svg class="icono" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg> Quitar</button>
       <div class="fila-doble">
         <div class="campo">
           <label>Nivel *</label>
@@ -187,7 +219,10 @@
 
   <template id="plantilla-experiencia">
     <div class="repetible-item" data-fila-experiencia>
-      <button type="button" class="repetible-item__quitar" data-accion="quitar">✕ Quitar</button>
+      <button type="button" class="repetible-item__quitar" data-accion="quitar"><svg class="icono" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg> Quitar</button>
       <div class="fila-doble">
         <div class="campo">
           <label>Cargo *</label>
@@ -216,6 +251,7 @@
   </template>
 
   <script src="js/utils.js"></script>
+  <script src="js/notificaciones.js"></script>
   <script src="js/perfil.js"></script>
 </body>
 

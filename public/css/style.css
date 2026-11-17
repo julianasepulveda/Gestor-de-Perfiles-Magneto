@@ -174,6 +174,7 @@ body {
   width: 100%;
   max-width: 400px;
   position: relative;
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.06);
 }
 
 .auth-card__logo {
@@ -555,7 +556,7 @@ body {
 }
 
 .navbar__logo img {
-  width: 30px;
+  width: 40px;
   transition: transform .2s ease;
 }
 
@@ -641,6 +642,7 @@ body {
   border-radius: var(--radio);
   padding: 24px 26px;
   margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.06);
 }
 
 .progreso-perfil__encabezado {
@@ -778,6 +780,7 @@ body {
   font-family: var(--fuente-cuerpo);
   color: var(--azul);
   background: #FBFCFD;
+  transition: border-color .15s ease, box-shadow .15s ease;
 }
 
 .campo textarea {
@@ -805,6 +808,7 @@ body {
   border-radius: 12px;
   padding: 18px;
   position: relative;
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.06);
 }
 
 .repetible-item__quitar {
@@ -848,8 +852,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--verde-suave);
-  color: var(--verde-oscuro);
+  background: var(--verde);
+  color: var(--blanco);
   padding: 6px 10px 6px 12px;
   border-radius: 999px;
   font-size: 13px;
@@ -859,7 +863,7 @@ body {
 .chip button {
   background: none;
   border: none;
-  color: var(--verde-oscuro);
+  color: var(--blanco);
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
@@ -940,6 +944,7 @@ body {
   border: 1px solid var(--gris-borde);
   border-radius: 12px;
   margin-bottom: 14px;
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.06);
   transition: box-shadow .15s ease, border-color .15s ease;
 }
 
@@ -1160,15 +1165,15 @@ body {
 
 .kanban {
   display: grid;
-  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  grid-template-columns: repeat(6, minmax(220px, 1fr));
   gap: 16px;
   overflow-x: auto;
   padding-bottom: 10px;
 }
 
-@media (max-width: 1000px) {
+@media (max-width: 1200px) {
   .kanban {
-    grid-template-columns: repeat(5, 240px);
+    grid-template-columns: repeat(6, 240px);
   }
 }
 
@@ -1205,6 +1210,7 @@ body {
   padding: 14px;
   margin-bottom: 10px;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(20, 41, 66, 0.06);
   transition: box-shadow .15s ease;
 }
 
@@ -1890,13 +1896,166 @@ body {
 .perfil-aside__mascota {
   display: flex;
   justify-content: center;
+  /* Sin recuadro ni fondo: la mascota flota libre y su resplandor/salto
+     no se recortan. */
+  background: none;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  overflow: visible;
 }
 
-/* Mascota: tamaño fijo y proporciones intactas (object-fit en .mascota-img) */
+/* Mascota (PNG con fondo transparente): proporciones fijas, nunca se
+   deforma. Sin recuadro cuadrado: nada de border/background/box-shadow/
+   padding. Al ser PNG recortado, solo se mueve la silueta del personaje
+   sobre cualquier fondo (ya no hace falta mix-blend-mode).
+   El movimiento continuo lo aporta la clase de emocion (.emocion-*). */
 .perfil-aside__mascota .mascota-img {
-  width: 120px;
-  filter: drop-shadow(0 8px 14px rgba(20, 41, 66, 0.16));
-  animation: flotar 3.2s ease-in-out infinite;
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border: none;
+  background: none;
+  box-shadow: none;
+  padding: 0;
+  /* Solo transicionamos 'filter' (cambio suave de color entre emociones).
+     NO transicionamos 'transform' porque las @keyframes de cada emoción
+     animan transform; una transición encima lo volvería entrecortado. */
+  transition: filter 0.3s ease;
+}
+
+/* ==========================================================
+   MASCOTA EMOTIVA — 4 estados con movimiento continuo propio.
+   Cada clase la pone perfil.js segun el porcentaje de completitud,
+   junto con el 'src' de la imagen y el mensaje de abajo.
+   Los selectores largos ganan especificidad a la base .mascota-img.
+   ========================================================== */
+
+/* 0-25%  TRISTE: balanceo lento y decaido + saturacion reducida */
+.perfil-aside__mascota .mascota-img.emocion-triste {
+  filter: grayscale(55%) saturate(0.6) brightness(0.97);
+  animation: masc-triste 3s ease-in-out infinite;
+}
+
+/* 26-50% ATENTA: inclinacion curiosa a los lados, como observando */
+.perfil-aside__mascota .mascota-img.emocion-atenta {
+  filter: none;
+  animation: masc-atenta 1.8s ease-in-out infinite;
+}
+
+/* 51-85% FELIZ: rebote alegre continuo + resplandor verde que sigue la
+   silueta (drop-shadow, sin borde ni caja rectangular). */
+.perfil-aside__mascota .mascota-img.emocion-feliz {
+  filter: drop-shadow(0 6px 12px rgba(0, 209, 178, 0.35));
+  animation: masc-feliz 1.2s ease-in-out infinite;
+}
+
+/* 86-100% EUFORICO: salto energico de celebracion + brillo verde que
+   sigue la silueta de la "M" (drop-shadow, sin borde ni caja). */
+.perfil-aside__mascota .mascota-img.emocion-euforico {
+  filter: drop-shadow(0 6px 12px rgba(0, 209, 178, 0.35));
+  animation: masc-euforico 0.8s ease-in-out infinite;
+}
+
+/* --- Keyframes de cada emocion --- */
+
+/* Triste: rotacion suave -3deg..3deg + ligera caida vertical */
+@keyframes masc-triste {
+
+  0%,
+  100% {
+    transform: rotate(-3deg) translateY(0);
+  }
+
+  50% {
+    transform: rotate(3deg) translateY(5px);
+  }
+}
+
+/* Atenta: tilt curioso -5deg..5deg */
+@keyframes masc-atenta {
+
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+
+  50% {
+    transform: rotate(5deg);
+  }
+}
+
+/* Feliz: rebote translateY 0..-8px */
+@keyframes masc-feliz {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* Euforico: salto translateY 0..-14px con ligero scale(1.06) */
+@keyframes masc-euforico {
+
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-14px) scale(1.06);
+  }
+}
+
+/* Respeta la preferencia de movimiento reducido del sistema */
+@media (prefers-reduced-motion: reduce) {
+
+  .perfil-aside__mascota .mascota-img.emocion-triste,
+  .perfil-aside__mascota .mascota-img.emocion-atenta,
+  .perfil-aside__mascota .mascota-img.emocion-feliz,
+  .perfil-aside__mascota .mascota-img.emocion-euforico {
+    animation: none;
+  }
+}
+
+/* Mensaje corto de la mascota (bajo la imagen), tinte por emocion via JS */
+.mascota-mensaje {
+  width: 100%;
+  text-align: center;
+  font-size: 12.8px;
+  font-weight: 600;
+  line-height: 1.45;
+  padding: 10px 13px;
+  border-radius: 14px;
+  background: var(--blanco);
+  color: var(--azul);
+  border: 1.5px solid var(--gris-borde);
+  box-shadow: 0 6px 16px rgba(20, 41, 66, 0.08);
+  transition: background .35s ease, border-color .35s ease, color .35s ease, opacity .3s ease, transform .3s ease;
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.mascota-mensaje.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mascota-mensaje.msg-triste {
+  background: #F1F3F5;
+  border-color: #D6DBE1;
+  color: var(--gris-texto);
+}
+
+.mascota-mensaje.msg-feliz,
+.mascota-mensaje.msg-euforico {
+  background: var(--verde-suave);
+  border-color: var(--verde);
+  color: var(--verde-oscuro);
 }
 
 /* Salto + parpadeo de opacidad al cambiar de seccion */
@@ -1921,9 +2080,10 @@ body {
   }
 }
 
-/* La animacion de salto tiene prioridad sobre el "flotar" mientras dura */
+/* La animacion de salto tiene prioridad sobre el "flotar" y sobre el "bounce"
+   del estado feliz mientras dura (por eso lleva !important). */
 .perfil-aside__mascota .mascota-img.mascota-salta {
-  animation: mascota-salto .6s ease;
+  animation: mascota-salto .6s ease !important;
 }
 
 /* Globo de texto breve de la mascota */
@@ -2006,7 +2166,8 @@ body {
   }
 
   .perfil-aside__mascota .mascota-img {
-    width: 84px;
+    width: 104px;
+    height: 104px;
   }
 
   .perfil-aside__globo {
@@ -2374,4 +2535,741 @@ body {
   padding: 18px 6px;
   border: 1px dashed var(--gris-borde);
   border-radius: 10px;
+}
+
+/* ==========================================================
+   Simulador de Entrevista IA (mentoría obligatoria)
+   ========================================================== */
+
+/* Botón "Mentoría IA Obligatoria" dentro de las tarjetas en_revision */
+.btn-mentoria-ia {
+  width: 100%;
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--morado), var(--turquesa));
+  color: var(--blanco);
+  font-family: var(--fuente-cuerpo);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+.btn-mentoria-ia:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -8px rgba(108, 92, 231, 0.7);
+  opacity: 0.96;
+}
+
+.btn-mentoria-ia__icono {
+  font-size: 14px;
+}
+
+/* "Check de Preparación" en las tarjetas que ya pasaron por la mentoría */
+.kanban-tarjeta__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 8px 0 2px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+/* --- Modal del simulador: más ancho y alineado a la izquierda --- */
+.simulador-card {
+  max-width: 680px;
+  width: 100%;
+  text-align: left;
+  padding: 28px 28px 22px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.simulador-cerrar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--gris-texto);
+  cursor: pointer;
+}
+
+.simulador-encabezado {
+  border-bottom: 1px solid var(--gris-borde);
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+}
+
+.simulador-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--morado), var(--turquesa));
+  color: var(--blanco);
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.simulador-card h3 {
+  text-align: left;
+  margin: 0 0 4px;
+}
+
+.simulador-subtitulo {
+  text-align: left;
+  margin: 0;
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+
+/* Cuerpo con scroll propio para no desbordar la pantalla */
+.simulador-cuerpo {
+  overflow-y: auto;
+  padding: 16px 2px 8px;
+  flex: 1 1 auto;
+}
+
+.simulador-intro {
+  font-size: 14px;
+  color: var(--azul);
+  background: var(--verde-suave);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.simulador-seccion {
+  margin-bottom: 20px;
+}
+
+.simulador-seccion h4 {
+  font-family: var(--fuente-titulos);
+  font-size: 14.5px;
+  color: var(--azul);
+  margin: 0 0 10px;
+}
+
+.simulador-nota {
+  font-size: 13px;
+  color: var(--gris-texto);
+  margin: 0;
+}
+
+/* Preguntas técnicas */
+.simulador-pregunta {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--gris-borde);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  background: var(--blanco);
+}
+
+.simulador-pregunta__num {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--morado);
+  color: var(--blanco);
+  font-weight: 700;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.simulador-pregunta__cuerpo {
+  flex: 1 1 auto;
+}
+
+.simulador-pregunta__texto {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--azul);
+  margin: 0 0 8px;
+  line-height: 1.45;
+}
+
+.simulador-pregunta__skill {
+  margin-bottom: 8px;
+}
+
+.simulador-pregunta__pista {
+  font-size: 12.5px;
+  color: var(--gris-texto);
+  margin: 6px 0 0;
+  line-height: 1.45;
+}
+
+/* Escenario conductual */
+.simulador-escenario {
+  border-left: 3px solid var(--turquesa);
+  padding: 4px 0 4px 14px;
+}
+
+.simulador-escenario p {
+  font-size: 13.5px;
+  color: var(--azul);
+  margin: 0 0 6px;
+  line-height: 1.5;
+}
+
+.simulador-escenario__evalua {
+  color: var(--gris-texto) !important;
+  font-size: 12.5px !important;
+}
+
+/* Consejos de preparación */
+.simulador-consejos {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.simulador-consejos li {
+  font-size: 13.5px;
+  color: var(--azul);
+  margin-bottom: 7px;
+  line-height: 1.45;
+}
+
+/* Pie con el botón de finalizar */
+.simulador-pie {
+  border-top: 1px solid var(--gris-borde);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.simulador-pie .btn-primario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Estado de carga inmersivo */
+.simulador-cargando {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.simulador-cargando p {
+  font-size: 13.5px;
+  color: var(--gris-texto);
+  max-width: 360px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Spinner grande, con color de marca (el .spinner base es blanco) */
+.spinner--grande {
+  width: 42px;
+  height: 42px;
+  border-width: 4px;
+  border: 4px solid var(--gris-borde);
+  border-top-color: var(--morado);
+}
+
+/* Estado de error dentro del modal */
+.simulador-error {
+  text-align: center;
+  padding: 30px 20px;
+}
+
+.simulador-error p {
+  font-size: 14px;
+  color: var(--azul);
+  margin: 0 0 8px;
+}
+
+.simulador-error__detalle {
+  font-size: 12.5px !important;
+  color: var(--gris-texto) !important;
+  margin-bottom: 18px !important;
+}
+
+@media (max-width: 720px) {
+  .simulador-card {
+    max-width: 100%;
+    max-height: 92vh;
+  }
+}
+
+/* ===== FASE ESTETICA CORPORATIVA — pulido de focus de filtros ===== */
+.filtro-campo select,
+.filtro-campo input {
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.filtro-campo select:focus,
+.filtro-campo input:focus {
+  outline: none;
+  border-color: var(--verde);
+  box-shadow: 0 0 0 4px rgba(12, 187, 78, 0.14);
+}
+
+/* ===== ICONOS SVG CORPORATIVOS ===== */
+.icono {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+}
+
+/* (Los estados de la mascota ahora se definen con imagenes reales y las
+   clases .emocion-* mas arriba en este archivo; el sistema antiguo basado
+   en filtros sobre el logo se retiro.) */
+
+/* ===== TOOLTIP DE SUGERENCIA EN FOCO ===== */
+.campo-tip {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: var(--azul-suave);
+  background: var(--verde-suave);
+  border-left: 3px solid var(--turquesa);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.4;
+  animation: campo-tip-aparecer .18s ease;
+}
+
+@keyframes campo-tip-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==========================================================
+   Acciones de tarjetas/panel de postulaciones
+   (Retirar postulación + Ver mentoría IA realizada)
+   ========================================================== */
+
+/* Contenedor de botones apilados dentro de una tarjeta del tablero */
+.kanban-tarjeta__acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Botón "Ver Mentoría IA Realizada" */
+.btn-ver-mentoria {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1.5px solid var(--morado);
+  border-radius: 10px;
+  background: #F3F1FD;
+  color: var(--morado);
+  font-family: var(--fuente-cuerpo);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+
+.btn-ver-mentoria:hover {
+  background: #E9E4FB;
+  transform: translateY(-1px);
+}
+
+.btn-ver-mentoria__icono {
+  display: inline-flex;
+}
+
+/* Botón "Retirar Postulación" (acción destructiva suave) */
+.btn-retirar {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 10px;
+  border: 1.5px solid #F6C6C1;
+  border-radius: 10px;
+  background: #FDECEA;
+  color: #B3271A;
+  font-family: var(--fuente-cuerpo);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease, transform .15s ease;
+}
+
+.btn-retirar:hover {
+  background: #FBD9D4;
+  transform: translateY(-1px);
+}
+
+/* Variante de bloque para el panel lateral de detalle */
+.btn-retirar--bloque {
+  padding: 11px 14px;
+  font-size: 13.5px;
+}
+
+/* Contenedor de acciones dentro del panel lateral de detalle */
+.detalle-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+/* La columna "Retiradas" del Kanban usa un acento gris apagado */
+.kanban-columna--cancelada .kanban-columna__titulo {
+  color: var(--gris-texto);
+}
+
+.kanban-tarjeta--cancelada {
+  opacity: 0.82;
+}
+
+/* ==========================================================
+   GUÍA CONTEXTUAL DINÁMICA — mascota asistente en el formulario
+   Tarjeta flotante fija (abajo-derecha) que acompaña con la mascota
+   "atenta" y un mensaje contextual segun el campo activo. No estorba
+   la escritura (pointer-events: none) y la imagen nunca se deforma.
+   ========================================================== */
+.guia-mascota {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 340px;
+  padding: 12px 16px 12px 12px;
+  background: var(--blanco);
+  border: 1.5px solid var(--verde);
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(20, 41, 66, 0.18);
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  transition: opacity .25s ease, transform .25s ease;
+  pointer-events: none;
+  /* nunca intercepta clics ni tapa el campo */
+}
+
+.guia-mascota.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Imagen de la mascota: proporciones fijas, nunca se deforma */
+.guia-mascota__img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border-radius: 12px;
+  flex-shrink: 0;
+  animation: flotar 3.2s ease-in-out infinite;
+}
+
+.guia-mascota__texto {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--azul);
+  font-weight: 500;
+}
+
+/* Piquito apuntando hacia abajo-derecha (hacia el formulario) */
+.guia-mascota::after {
+  content: "";
+  position: absolute;
+  left: 34px;
+  bottom: -8px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid var(--verde);
+}
+
+/* En pantallas pequeñas, la guía ocupa el ancho inferior sin tapar tanto */
+@media (max-width: 600px) {
+  .guia-mascota {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+  }
+}
+
+/* Respeta la preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  .guia-mascota__img {
+    animation: none;
+  }
+
+  .guia-mascota {
+    transition: opacity .2s ease;
+    transform: none;
+  }
+}
+
+/* ==========================================================
+   CATÁLOGO DE HABILIDADES — ovalitos azules clicables
+   Reemplaza el desplegable nativo: todas las habilidades disponibles
+   se muestran como "ovalitos" azules debajo del input; al hacer clic
+   se agregan como chip (verde) arriba.
+   ========================================================== */
+.catalogo-habilidades__titulo {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gris-texto);
+  margin: 16px 0 8px;
+}
+
+.catalogo-habilidades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Ovalito del catálogo: pill azul corporativo, clicable. */
+.skill-ovalo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--azul);
+  background: var(--azul);
+  color: var(--blanco);
+  font-family: var(--fuente-cuerpo);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform .15s ease, background .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+/* Signo "+" sutil al inicio para invitar a agregar. */
+.skill-ovalo::before {
+  content: "+";
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.skill-ovalo:hover {
+  background: var(--azul-suave);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(20, 41, 66, 0.22);
+}
+
+.skill-ovalo:active {
+  transform: translateY(0);
+}
+
+/* Habilidad ya agregada: ovalito atenuado y sin interacción. */
+.skill-ovalo--agregada {
+  background: #EDEFF3;
+  border-color: #D6DBE1;
+  color: #9AA4B1;
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+
+.skill-ovalo--agregada::before {
+  content: "✓";
+  opacity: 1;
+}
+
+/* ==========================================================
+   CENTRO DE NOTIFICACIONES — campana + badge + dropdown
+   Se inyecta en el navbar por public/js/notificaciones.js.
+   ========================================================== */
+.notif-campana {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.notif-campana__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: none;
+  color: var(--azul);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+
+.notif-campana__btn:hover {
+  background: var(--verde-suave);
+  color: var(--verde-oscuro);
+}
+
+/* Badge contador en el verde corporativo de Magneto */
+.notif-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #00D1B2;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--blanco);
+}
+
+.notif-badge[hidden] {
+  display: none;
+}
+
+/* Dropdown de notificaciones */
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  max-width: 88vw;
+  max-height: 440px;
+  display: flex;
+  flex-direction: column;
+  background: var(--blanco);
+  border: 1px solid var(--gris-borde);
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(20, 41, 66, 0.18);
+  z-index: 80;
+  overflow: hidden;
+  animation: notif-aparecer .18s ease;
+}
+
+.notif-dropdown[hidden] {
+  display: none;
+}
+
+@keyframes notif-aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notif-dropdown__cabecera {
+  padding: 13px 16px;
+  font-family: var(--fuente-titulos);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--azul);
+  border-bottom: 1px solid var(--gris-borde);
+}
+
+.notif-dropdown__lista {
+  overflow-y: auto;
+  padding: 6px;
+}
+
+.notif-vacio {
+  padding: 26px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gris-texto);
+}
+
+.notif-item {
+  padding: 11px 12px;
+  border-radius: 10px;
+  transition: background .15s ease;
+}
+
+.notif-item:hover {
+  background: #F7F9FA;
+}
+
+/* Resalta las no leídas con una barra verde corporativa a la izquierda */
+.notif-item--no-leida {
+  background: var(--verde-suave);
+}
+
+.notif-item--no-leida:hover {
+  background: #DBF5E6;
+}
+
+.notif-item__titulo {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--azul);
+  margin-bottom: 3px;
+}
+
+.notif-item__mensaje {
+  font-size: 12.5px;
+  color: var(--gris-texto);
+  line-height: 1.45;
+}
+
+.notif-item__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.notif-item__fecha {
+  font-size: 11px;
+  color: #9AA4B1;
+}
+
+.notif-item__cta {
+  font-size: 12px;
+  font-weight: 700;
+  color: #00D1B2;
+  text-decoration: none;
+}
+
+.notif-item__cta:hover {
+  text-decoration: underline;
 }

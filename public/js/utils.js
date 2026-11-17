@@ -1,26 +1,19 @@
-// Utilidades compartidas por todas las pantallas del portal (excepto
-// login/register, que no requieren estar autenticado).
-//
-// Centralizar esto evita repetir la misma lógica de "agregar el token"
-// y "qué hacer si la sesión expiró" en cada archivo .js de cada página
-// (principio de buenas prácticas: no te repitas / DRY).
+// Utilidades compartidas por las pantallas autenticadas del portal.
+// Centraliza el envío del token y el manejo de sesión expirada (DRY).
 
 const API_BASE = '';
 
-// --------------------------------------------------------------
-// Protege una pagina: si no hay token guardado, redirige al login
-// de inmediato. Se debe llamar al inicio de cada pantalla protegida.
-// Devuelve el usuario guardado si todo esta bien.
-// --------------------------------------------------------------
+/**
+ * Protege una página: si no hay sesión válida, limpia el almacenamiento y
+ * redirige al login. Se llama al inicio de cada pantalla protegida.
+ * @returns {object|null} El usuario guardado, o null si se redirigió.
+ */
 function protegerPagina() {
   const token = localStorage.getItem('perfil360_token');
   const usuarioTexto = localStorage.getItem('perfil360_usuario');
 
-  // Se rechazan tanto los valores ausentes como los corruptos ('undefined'
-  // o 'null' guardados como texto). Antes, un token literal "undefined"
-  // pasaba este filtro y provocaba un 401 en cada peticion -> bucle de
-  // redireccion al login. Ahora cualquier dato invalido se limpia y se
-  // envia al usuario a login de forma limpia (sin reventar en JSON.parse).
+  // Se rechazan los valores ausentes y los corruptos ('undefined'/'null' como
+  // texto): un token literal "undefined" provocaría un 401 en cada petición.
   const tokenValido = token && token !== 'undefined' && token !== 'null';
   const usuarioValido = usuarioTexto && usuarioTexto !== 'undefined' && usuarioTexto !== 'null';
 
@@ -34,8 +27,7 @@ function protegerPagina() {
   try {
     return JSON.parse(usuarioTexto);
   } catch (error) {
-    // Dato corrupto: lo limpiamos y mandamos a login en vez de dejar la
-    // pagina rota por una excepcion no capturada.
+    // Dato corrupto: se limpia y se redirige al login.
     localStorage.removeItem('perfil360_token');
     localStorage.removeItem('perfil360_usuario');
     window.location.href = 'login.html';
@@ -43,10 +35,12 @@ function protegerPagina() {
   }
 }
 
-// --------------------------------------------------------------
-// Protege una pagina que ademas requiere un rol especifico (ej: solo
-// 'admin'). Si el usuario no tiene ese rol, lo manda a su panel normal.
-// --------------------------------------------------------------
+/**
+ * Protege una página que requiere un rol específico. Si el usuario no lo
+ * tiene, lo redirige al dashboard.
+ * @param {string[]} rolesPermitidos
+ * @returns {object|null} El usuario autorizado, o null si se redirigió.
+ */
 function protegerPaginaPorRol(rolesPermitidos) {
   const usuario = protegerPagina();
   if (!usuario) return null;
@@ -58,11 +52,7 @@ function protegerPaginaPorRol(rolesPermitidos) {
   return usuario;
 }
 
-// --------------------------------------------------------------
-// Construye los links del navbar para un candidato, marcando cual
-// pagina esta activa. Se reutiliza en dashboard/perfil/vacantes/postulaciones
-// en vez de repetir el mismo HTML en cada archivo (DRY).
-// --------------------------------------------------------------
+// Construye los enlaces del navbar del candidato marcando la página activa.
 function construirNavbarCandidato(paginaActiva) {
   const paginas = [
     { href: 'perfil.html', texto: 'Perfil' },
@@ -88,15 +78,10 @@ function activarBotonSalir() {
   });
 }
 
-// --------------------------------------------------------------
-// Widget de completitud del perfil, para el navbar. Se muestra en
-// TODAS las pantallas del candidato (no solo el dashboard), asi el
-// candidato siempre sabe que tan completo esta su perfil y hacia
-// donde va la mascota "caminando" sobre la barra.
-// --------------------------------------------------------------
+// Renderiza el widget de completitud del perfil en el navbar del candidato.
 async function renderizarWidgetCompletitud() {
   const contenedor = document.getElementById('widget-completitud');
-  if (!contenedor) return; // esta pagina no tiene el widget (ej. admin)
+  if (!contenedor) return; // esta página no tiene el widget (ej. admin)
 
   const respuesta = await apiFetch('/api/perfil');
   if (!respuesta || !respuesta.ok) return;
@@ -119,11 +104,7 @@ async function renderizarWidgetCompletitud() {
   return completitud;
 }
 
-// --------------------------------------------------------------
-// Confeti simple (sin librerias externas): crea N piezas de colores
-// que caen desde arriba y se autodestruyen. Se usa para celebrar
-// hitos como completar el perfil al 100% o postularse.
-// --------------------------------------------------------------
+// Confeti sin librerías externas para celebrar hitos (perfil al 100%, postular).
 function lanzarConfeti() {
   const colores = ['#0CBB4E', '#17C3C0', '#6C5CE7', '#F5A623', '#E4483B'];
   const cantidad = 60;
@@ -141,11 +122,7 @@ function lanzarConfeti() {
   }
 }
 
-// --------------------------------------------------------------
-// Muestra la mascota con un globito de texto contextual. Se usa en
-// login/registro/formularios para que ninguna pantalla se sienta
-// "estatica". `destinoId` es el id del elemento donde se inserta.
-// --------------------------------------------------------------
+// Inserta la mascota con un globo de texto contextual en el elemento destinoId.
 function mostrarMascotaGuia(destinoId, mensaje) {
   const destino = document.getElementById(destinoId);
   if (!destino) return;
@@ -155,11 +132,7 @@ function mostrarMascotaGuia(destinoId, mensaje) {
   `;
 }
 
-// --------------------------------------------------------------
-// Mascota "limpia": solo la imagen flotando, sin globo de texto. Se usa
-// cuando el texto estatico rompia el layout; el mensaje ahora vive en el
-// titulo/subtitulo de la seccion, no en un globo sobre la mascota.
-// --------------------------------------------------------------
+// Inserta la mascota sin globo de texto (solo la imagen flotante).
 function mostrarMascotaLimpia(destinoId) {
   const destino = document.getElementById(destinoId);
   if (!destino) return;
@@ -168,28 +141,25 @@ function mostrarMascotaLimpia(destinoId) {
   `;
 }
 
-// --------------------------------------------------------------
-// Variante "pulgar arriba": mascota celebrando con una insignia de
-// check. Se usa cuando el perfil llega al 100% para reforzar el logro.
-// Ya no inyecta globo de texto (evita que rompa el layout).
-// --------------------------------------------------------------
+// Inserta la mascota celebrando con una insignia de check (perfil al 100%).
 function mostrarMascotaPulgarArriba(destinoId) {
   const destino = document.getElementById(destinoId);
   if (!destino) return;
   destino.innerHTML = `
     <div class="mascota-celebra">
       <img src="img/logo-perfil3601.png" alt="Perfil 360" class="mascota-flotante mascota-img" />
-      <span class="mascota-celebra__badge" aria-hidden="true">👍</span>
+      <span class="mascota-celebra__badge" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 11v9H4a1 1 0 0 1-1-1v-7a1 1 0 0 1 1-1Z"/><path d="M7 11l4-7a2 2 0 0 1 3 1.8V9h4.5a2 2 0 0 1 2 2.3l-1.2 6.5a2 2 0 0 1-2 1.7H7"/></svg></span>
     </div>
   `;
 }
 
-// --------------------------------------------------------------
-// Wrapper de fetch que agrega automaticamente el header Authorization
-// con el token guardado, y que redirige al login si el backend
-// responde 401 (sesion invalida o expirada) — cumple con el criterio
-// de HU-RNF-002 de bloquear accesos no autorizados.
-// --------------------------------------------------------------
+/**
+ * Wrapper de fetch que añade el header Authorization con el token guardado y
+ * redirige al login si el backend responde 401 (HU-RNF-002).
+ * @param {string} ruta
+ * @param {RequestInit} [opciones]
+ * @returns {Promise<{ok: boolean, status: number, datos: object}|null>}
+ */
 async function apiFetch(ruta, opciones = {}) {
   const token = localStorage.getItem('perfil360_token');
 
@@ -213,10 +183,7 @@ async function apiFetch(ruta, opciones = {}) {
   return { ok: respuesta.ok, status: respuesta.status, datos };
 }
 
-// --------------------------------------------------------------
-// Pequeño "toast" (notificación flotante) reutilizable en toda la app,
-// para no tener que reimplementar un mensaje emergente en cada pantalla.
-// --------------------------------------------------------------
+// Muestra un toast (notificación flotante) reutilizable en toda la app.
 function mostrarToast(mensaje, tipo = 'exito') {
   let contenedor = document.getElementById('toast-contenedor');
   if (!contenedor) {
@@ -238,10 +205,11 @@ function mostrarToast(mensaje, tipo = 'exito') {
   }, 3500);
 }
 
-// --------------------------------------------------------------
-// Confirmación reutilizable antes de acciones críticas (HU-RNF-004).
-// Devuelve una Promise<boolean> para poder usarse con await.
-// --------------------------------------------------------------
+/**
+ * Modal de confirmación reutilizable antes de acciones críticas (HU-RNF-004).
+ * @param {{titulo: string, mensaje: string, textoConfirmar?: string, textoCancelar?: string}} opciones
+ * @returns {Promise<boolean>} true si el usuario confirma.
+ */
 function confirmarAccion({ titulo, mensaje, textoConfirmar = 'Confirmar', textoCancelar = 'Cancelar' }) {
   return new Promise((resolve) => {
     const overlay = document.createElement('div');

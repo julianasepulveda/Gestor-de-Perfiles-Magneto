@@ -1,6 +1,4 @@
-// Controlador de autenticacion.
-// Aqui vive la logica de negocio: validar datos, hablar con la base de
-// datos y decidir que respuesta enviar al frontend.
+// Controlador de autenticacion: registro e inicio de sesion.
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -9,18 +7,17 @@ const { pool } = require('../config/db');
 const REGEX_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
 
-// ------------------------------------------------------------------
-// POST /api/auth/register
-// Criterios de aceptacion cubiertos:
-//  - Datos validos -> crea la cuenta y responde 201 (mensaje de exito)
-//  - Correo ya registrado -> responde 409 "El correo ya se encuentra registrado"
-//  - Password < 8 caracteres -> responde 400 con mensaje de validacion
-// ------------------------------------------------------------------
+/**
+ * Registra un nuevo candidato: valida correo y contraseña, verifica que el
+ * correo no exista y persiste el usuario con la contraseña cifrada (bcrypt).
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function registrar(req, res) {
   try {
     const { correo, password } = req.body;
 
-    // --- Validacion de entrada ---
     if (!correo || !password) {
       return res.status(400).json({ ok: false, mensaje: 'Correo y contraseña son obligatorios.' });
     }
@@ -36,15 +33,13 @@ async function registrar(req, res) {
       });
     }
 
-    // --- Verificar si el correo ya existe ---
     const [existentes] = await pool.query('SELECT id FROM usuarios WHERE correo = ?', [correo]);
 
     if (existentes.length > 0) {
       return res.status(409).json({ ok: false, mensaje: 'El correo ya se encuentra registrado' });
     }
 
-    // --- Crear la cuenta ---
-    // Nunca guardamos la contraseña en texto plano: la "hasheamos" con bcrypt.
+    // La contraseña nunca se guarda en texto plano: se cifra con bcrypt.
     const passwordHash = await bcrypt.hash(password, 10);
 
     await pool.query(
@@ -63,12 +58,14 @@ async function registrar(req, res) {
   }
 }
 
-// ------------------------------------------------------------------
-// POST /api/auth/login
-// Criterios de aceptacion cubiertos:
-//  - Credenciales validas -> autentica y devuelve info para redirigir segun rol
-//  - Credenciales invalidas -> responde 401 "Credenciales inválidas..."
-// ------------------------------------------------------------------
+/**
+ * Autentica a un usuario: compara la contraseña contra el hash almacenado y,
+ * si es válida, emite un token JWT con id, correo y rol para las peticiones
+ * posteriores.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @returns {Promise<void>}
+ */
 async function iniciarSesion(req, res) {
   try {
     const { correo, password } = req.body;
@@ -95,7 +92,7 @@ async function iniciarSesion(req, res) {
       return res.status(401).json({ ok: false, mensaje: MENSAJE_CREDENCIALES_INVALIDAS });
     }
 
-    // Se genera un token (JWT) que el frontend guardara para futuras peticiones.
+    // Token JWT que el frontend guarda y envía en las peticiones protegidas.
     const token = jwt.sign(
       { id: usuario.id, correo: usuario.correo, rol: usuario.rol },
       process.env.JWT_SECRET || 'secreto_temporal',

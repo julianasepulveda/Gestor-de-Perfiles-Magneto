@@ -1,16 +1,18 @@
-// Middleware de autenticacion.
-// Un "middleware" es una funcion que se ejecuta ANTES de que la peticion
-// llegue al controller. Aqui verificamos que el usuario venga con un
-// token JWT valido antes de dejarlo pasar a rutas protegidas.
-//
-// Esto resuelve el criterio de HU-RNF-002: "Los intentos de acceso no
-// autorizados deben ser bloqueados y redirigidos al inicio de sesion".
+// Middleware de autenticacion y autorizacion basado en JWT.
+// Bloquea los accesos no autorizados a rutas protegidas (HU-RNF-002).
 
 const jwt = require('jsonwebtoken');
 
-// Uso: router.get('/ruta-protegida', verificarToken, miControlador)
+/**
+ * Verifica el token JWT del header Authorization (Bearer). Si es válido,
+ * expone el payload en req.usuario y continúa; si no, responde 401.
+ * @param {import('express').Request} req
+ * @param {import('express').Response} res
+ * @param {import('express').NextFunction} next
+ * @returns {void}
+ */
 function verificarToken(req, res, next) {
-  const authHeader = req.headers.authorization; // formato esperado: "Bearer eyJhbGciOi..."
+  const authHeader = req.headers.authorization; // formato esperado: "Bearer <token>"
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ ok: false, mensaje: 'No autorizado. Inicia sesión nuevamente.' });
@@ -20,15 +22,19 @@ function verificarToken(req, res, next) {
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET || 'secreto_temporal');
-    req.usuario = payload; // queda disponible en el controller como req.usuario.id, .rol, etc.
-    next(); // deja pasar la peticion al siguiente paso (el controller)
+    req.usuario = payload;
+    next();
   } catch (error) {
-    // jwt.verify lanza error si el token es invalido, fue alterado, o ya expiro
     return res.status(401).json({ ok: false, mensaje: 'Sesión inválida o expirada. Inicia sesión nuevamente.' });
   }
 }
 
-// Uso: router.post('/solo-admin', verificarToken, verificarRol('admin'), miControlador)
+/**
+ * Restringe el acceso a los roles indicados; responde 403 si el usuario
+ * autenticado no tiene uno de ellos.
+ * @param {...string} rolesPermitidos
+ * @returns {import('express').RequestHandler}
+ */
 function verificarRol(...rolesPermitidos) {
   return (req, res, next) => {
     if (!req.usuario || !rolesPermitidos.includes(req.usuario.rol)) {

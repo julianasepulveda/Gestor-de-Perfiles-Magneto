@@ -1,6 +1,5 @@
-// Punto de entrada de la aplicacion.
-// Levanta el servidor Express, sirve el frontend (carpeta /public)
-// y expone la API de autenticacion en /api/auth.
+// Punto de entrada de la aplicacion: configura Express, sirve el frontend
+// estatico de /public y monta las rutas de la API REST.
 
 require('dotenv').config();
 const express = require('express');
@@ -10,31 +9,34 @@ const path = require('path');
 const { verificarConexion } = require('./config/db');
 const authRoutes = require('./routes/auth.routes');
 const perfilRoutes = require('./routes/perfil.routes');
+const habilidadesRoutes = require('./routes/habilidades.routes');
 const vacantesRoutes = require('./routes/vacantes.routes');
 const postulacionesRoutes = require('./routes/postulaciones.routes');
+const notificacionesRoutes = require('./routes/notificaciones.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// --- Middlewares ---
 app.use(cors());
-app.use(express.json()); // permite leer JSON en req.body
+app.use(express.json());
 
-// --- Frontend estatico (HTML/CSS/JS de la carpeta public) ---
+// Frontend estatico (HTML/CSS/JS de la carpeta public)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- API ---
+// API REST
 app.use('/api/auth', authRoutes);
 app.use('/api/perfil', perfilRoutes);
+app.use('/api/habilidades', habilidadesRoutes);
 app.use('/api/vacantes', vacantesRoutes);
 app.use('/api/postulaciones', postulacionesRoutes);
+app.use('/api/notificaciones', notificacionesRoutes);
 
-// Ruta de salud, util para confirmar que el backend esta vivo
+// Endpoint de salud para verificar que el backend responde
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, mensaje: 'Perfil 360 API funcionando correctamente' });
 });
 
 app.listen(PORT, async () => {
-  console.log(`🚀 Servidor Perfil 360 corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor Perfil 360 corriendo en http://localhost:${PORT}`);
   await verificarConexion();
 });

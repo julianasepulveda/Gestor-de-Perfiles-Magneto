@@ -42,7 +42,10 @@
   <!-- Panel lateral de detalle -->
   <div class="panel-lateral-overlay" id="overlay-detalle">
     <div class="panel-lateral">
-      <button class="panel-lateral__cerrar" id="btn-cerrar-detalle">✕</button>
+      <button class="panel-lateral__cerrar" id="btn-cerrar-detalle"><svg class="icono" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12" />
+        </svg></button>
       <h3 id="detalle-titulo-vacante" style="font-family:var(--fuente-titulos); color:var(--azul); margin: 10px 0 2px;">
       </h3>
       <p id="detalle-empresa-modalidad" style="font-size:13px; color:var(--gris-texto); margin:0 0 16px;"></p>
@@ -50,10 +53,14 @@
 
       <p style="font-size:13px; font-weight:600; color:var(--azul); margin-top:22px;">Historial del proceso</p>
       <div class="timeline-historial" id="detalle-historial"></div>
+
+      <!-- Acciones de la postulación (retirar / ver mentoría), según estado -->
+      <div class="detalle-acciones" id="detalle-acciones"></div>
     </div>
   </div>
 
   <script src="js/utils.js"></script>
+  <script src="js/notificaciones.js"></script>
   <script src="js/postulaciones.js"></script>
 </body>
 

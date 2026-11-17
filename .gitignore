@@ -1,2 +1,23 @@
+# Dependencias
 node_modules/
+
+# Variables de entorno (contienen secretos: no subir nunca)
 .env
+.env.local
+.env.*.local
+
+# Artefactos de herramientas de asistencia / trabajo temporal
+.agents/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Archivos temporales y de sistema operativo
+Thumbs.db
+.DS_Store
+
+# Archivos de editor/IDE
+.vscode/
+.idea/
+*.swp
